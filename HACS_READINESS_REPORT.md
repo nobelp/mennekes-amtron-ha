@@ -199,7 +199,6 @@ git clone https://github.com/nobelp/mennekes-amtron-ha.git
 ---
 
 **Report Generated**: 2026-06-24  
-**Prepared By**: Claude Code  
 **Status**: ✅ **APPROVED FOR HACS DEFAULT REPOSITORY**
 
 ---

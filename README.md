@@ -33,18 +33,6 @@ git clone https://github.com/nobelp/mennekes-amtron-ha.git ~/HA_Menneckes
 
 ---
 
-## ✅ Home Assistant Quality Scale
-
-| Aspect | Status | Details |
-|--------|--------|---------|
-| **Code Quality** | ⭐⭐⭐⭐ | Python scripts with error handling |
-| **Documentation** | ⭐⭐⭐⭐⭐ | Comprehensive in German + English |
-| **Testing** | ⭐⭐⭐ | Tested on HA 2026.5.4 + AMTRON 730 |
-| **Maintainability** | ⭐⭐⭐⭐ | Modular YAML + Python structure |
-| **Security** | ⭐⭐⭐⭐ | No hardcoded passwords/IPs, .env support |
-
----
-
 ## Overview: How Everything Connects
 
 ```
@@ -628,6 +616,30 @@ Unknown RFIDs appear as `"RFID_CODE — RFID_CODE"` (RFID = name, not yet assign
 | `sensor.dlm_num_slaves_connected` | DLM slaves | – |
 | `sensor.dlm_overall_current_available_l1/l2/l3` | DLM available | A |
 | `sensor.dlm_overall_current_applied_l1/l2/l3` | DLM applied | A |
+
+### Custom Component Sensors (mennekes_amtron integration v2.0.2)
+
+| Entity | Description | Unit |
+|--------|-------------|------|
+| `sensor.mennekes_amtron_voltage_l1/l2/l3` | Meter Voltage per phase (v1.5) | V |
+| `sensor.mennekes_amtron_current_l1/l2/l3` | Meter Current per phase (v1.5) | A |
+| `sensor.mennekes_amtron_power_l1/l2/l3` | Meter Power per phase (v1.5) | W |
+| `sensor.mennekes_amtron_total_power` | Total Power (v1.5) | W |
+| `sensor.mennekes_amtron_energy_l1/l2/l3` | Meter Energy per phase (v1.5) | kWh |
+| `sensor.mennekes_amtron_total_energy` | Total Energy (v1.5) | kWh |
+| `sensor.mennekes_amtron_session_energy` | Session Energy (v1.5) | kWh |
+| `sensor.mennekes_amtron_session_duration` | Charging Duration (v1.5) | s |
+| `sensor.mennekes_amtron_signaled_current` | Signaled Current to EV (v1.5) | A |
+| `sensor.mennekes_amtron_charging_status` | Charging Status (OCPP) | text |
+| `sensor.mennekes_amtron_vehicle_state` | Vehicle State (A–E) | text |
+| `sensor.mennekes_amtron_phase_switch_mode` | **Phase Switch Mode (NEW v1.5)** | text |
+| `number.mennekes_amtron_hems_current_limit` | **HEMS Current Limit v1.5 (0.1A steps)** | A |
+| `number.mennekes_amtron_safe_current` | Safe Current (fallback mode) | A |
+| `number.mennekes_amtron_communication_timeout` | Communication Timeout | s |
+| `switch.mennekes_amtron_cp_availability` | CP Availability | on/off |
+| `switch.mennekes_amtron_pause_charging` | Pause Charging | on/off |
+
+> **Note**: v1.5 protocol provides corrected Modbus register mapping and Phase Switch Mode support for 11kW devices with dynamic phase switching. Energy values use proper byte order (int32 parsing).
 
 ### Template Sensors (from `templates/wallbox.yaml`)
 
