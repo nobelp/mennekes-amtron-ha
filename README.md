@@ -933,17 +933,6 @@ python3 generate_dashboard.py > /workspace/homeassistant/.storage/lovelace.dashb
 
 ---
 
-## Version & Last Update
-
-- **HA version**: 2026.5.4 (minimum: 2026.1.0)
-- **Wallbox firmware**: 1.5.41 (tested)
-- **apexcharts-card**: 2.2.3 (required for dashboard)
-- **Python**: 3.9+ (already included in HA)
-- **Last update**: 2026-06-24
-- **Tested**: Modbus TCP ✓, REST API ✓, vehicle mapping (dropdown) ✓, cost calculation ✓, ApexCharts chart ✓, recorder exclusion ✓
-
----
-
 ## 📋 Known Limitations & Support
 
 ### Supported Wallboxes
