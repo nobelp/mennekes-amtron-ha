@@ -4,6 +4,32 @@ Alle wichtigen Änderungen an diesem Projekt werden hier dokumentiert.
 
 ---
 
+## [1.1.1] – 2026-07-15
+
+### Added
+- 🔧 **Modbus v1.5 Protocol Support** – Neue Custom Component Integration mit korrekten Register-Adressen
+- 🆕 **Phase Switch Mode Sensor** – Unterstützung für dynamische Phasenumschaltung (11kW Geräte)
+- 📊 **Corrected Meter Values** – Richtige int32 Register-Byte-Reihenfolge für exakte Energiemessung
+- 🎁 **New HEMS v1.5 Support** – HEMS Current Limit mit 0.1A Schritte (Register 2000 statt 1000)
+
+### Fixed
+- 🐛 **Energy Calculation** – Korrekte Umrechnung von Wh zu kWh (int32 Byte-Reihenfolge)
+- 🔌 **Register Mapping** – Voltage/Current/Power Register gemäß v1.5 Dokumentation (222-227 statt 200-202)
+- 📋 **Session Data** – Korrigierte Register für Charged Energy (716 statt 705) und Charging Duration (718 statt 709)
+
+### Changed
+- 📝 **Documentation** – Entfernt: Home Assistant Quality Scale Kapitel
+- 📚 **Sensor Documentation** – Ergänzt: Alle v1.5 Integration Sensoren mit genauen Registeradressen
+- ⚡ **Deprecated Registers** – YAML Modbus liest nun nur noch v1.5 konforme Register
+
+### Technical Details
+- **Protocol Version**: 1.5 (AMTRON 4You500/4Business700)
+- **Compatible Models**: 4You 400/500, 4Business 600/700 (identische Kommunikation)
+- **Integration Type**: Custom Component (mennekes_amtron)
+- **Breaking Changes**: Old modbus_wallbox.yaml deprecated; use custom component instead
+
+---
+
 ## [1.1.0] – 2026-06-24
 
 ### Added
