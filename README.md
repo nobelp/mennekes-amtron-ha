@@ -933,36 +933,6 @@ python3 generate_dashboard.py > /workspace/homeassistant/.storage/lovelace.dashb
 
 ---
 
-## 📋 Known Limitations & Support
-
-### Supported Wallboxes
-- ✅ **Mennekes AMTRON 4Business 730 11 C2** (tested, fully supported)
-- ⚠️ Other AMTRON models (may work – no guarantee)
-- ❌ Other Mennekes models (not tested)
-
-### Known Limitations
-1. **Mennekes AMTRON 730 only**: Integration is hardcoded and optimized for this model
-2. **Modbus registers**: Based on firmware 1.5.41 – newer versions may have different registers
-3. **REST API**: Requires installer password (not user password)
-4. **Dashboard**: Requires `apexcharts-card` from HACS
-
-### Troubleshooting
-
-Before requesting support, please check:
-1. **View logs**: Settings → System → Logs (search for "wallbox")
-2. **Run diagnose.sh script**: `bash diagnose.sh`
-3. **Read QUICKSTART.md and README.md** (comprehensive troubleshooting guides available)
-
----
-
-## 🤝 Community & Support
-
-- **GitHub Issues**: [nobelp/mennekes-amtron-ha/issues](https://github.com/nobelp/mennekes-amtron-ha/issues)
-- **Home Assistant Community**: [Home Assistant Discourse](https://discourse.home-assistant.io)
-- **Documentation**: See `README.md`, `QUICKSTART.md`, `SYSTEMLOGS_SETUP.md`
-
----
-
 ## 📝 Changelog & Versioning
 
 See [CHANGELOG.md](CHANGELOG.md) for complete change history.
