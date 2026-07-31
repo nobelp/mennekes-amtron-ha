@@ -78,6 +78,58 @@ git clone https://github.com/nobelp/mennekes-amtron-ha.git ~/HA_Menneckes
 
 ---
 
+## 🚀 Installation & Setup
+
+### Step 1: Install via HACS
+
+1. **HACS → Custom Repositories**
+   ```
+   URL: https://github.com/nobelp/mennekes-amtron-ha
+   Category: Integration
+   ```
+
+2. **Install Mennekes AMTRON**
+   ```
+   HACS → nobelp/mennekes-amtron-ha → Install
+   ```
+
+3. **Restart Home Assistant**
+   ```
+   Settings → System → System Options → Restart Home Assistant
+   ```
+
+### Step 2: Configure via UI (Recommended)
+
+1. **Go to Integrations**
+   ```
+   Settings → Devices & Services → Integrations
+   ```
+
+2. **Create Integration**
+   ```
+   Click "Create Integration"
+   Search for "Mennekes AMTRON"
+   ```
+
+3. **Fill in the Configuration Form**
+
+<img src="assets/config-flow-setup.png" alt="Config Flow Setup" width="600">
+
+**Required Fields:**
+- **IP Address/Hostname:** Wallbox IP (e.g., 192.168.2.179 or wallbox.local)
+- **API Port:** HTTP API Port (default: 80)
+- **Installer Password:** Wallbox installer password
+- **Modbus Port:** TCP Modbus Port (default: 502)
+- **Electricity Price:** Price per kWh for cost calculation (default: 0.29 CHF)
+- **Update Interval:** Sensor update frequency in seconds (default: 30)
+
+4. **Click OK**
+   ```
+   Integration will validate connection and save configuration
+   ```
+
+---
+
 ## Environment Variables & Configuration
 
 ### Creating the .env File
