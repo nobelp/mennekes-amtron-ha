@@ -9,9 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    API_EVENT_LIMIT,
     DOMAIN,
     METER_BLOCK_COUNT,
     MODBUS_CONNECT_TIMEOUT,
+    MODBUS_SLAVE_ID,
     REG_CP_STATUS,
     REG_ENERGY_L1,
     REG_HEMS_CURRENT_LIMIT,
@@ -55,9 +57,7 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             return self._client
 
         self._client = AsyncModbusTcpClient(
-            host=self._host,
-            port=self._port,
-            timeout=MODBUS_CONNECT_TIMEOUT,
+            self._host, port=self._port, timeout=MODBUS_CONNECT_TIMEOUT
         )
         await self._client.connect()
 
@@ -70,7 +70,9 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(
                 f"No Modbus TCP connection to {self._host}:{self._port} — the wallbox "
                 "refused or immediately closed the session. Check that Modbus TCP is "
-                "enabled and that no other client holds the single allowed connection."
+                "enabled and that no other client holds the single allowed connection. "
+                "The wallbox also rejects Modbus while its API reports "
+                "systemStatus 'UpdateInProgress'."
             )
 
         return self._client
@@ -80,10 +82,8 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             client = await self._get_client()
             data: dict[str, Any] = {}
 
-            _LOGGER.debug("Reading Modbus registers from %s:%d", self._host, self._port)
-
             # OCPP status (104) + error codes (105–112, 4 * uint32)
-            r = await client.read_holding_registers(REG_CP_STATUS, count=9)
+            r = await client.read_holding_registers(REG_CP_STATUS, count=9, device_id=MODBUS_SLAVE_ID)
             if not r.isError() and len(r.registers) >= 9:
                 regs = r.registers
                 data["cp_status"] = regs[0]
@@ -92,13 +92,13 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
                 ]
 
             # Vehicle state + CP availability: 122–124 (3 registers)
-            r = await client.read_holding_registers(REG_VEHICLE_STATE, count=3)
+            r = await client.read_holding_registers(REG_VEHICLE_STATE, count=3, device_id=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["vehicle_state"] = r.registers[0]
                 data["cp_availability"] = r.registers[2]
 
             # Safe current + comm timeout: 131–132 (2 registers)
-            r = await client.read_holding_registers(REG_SAFE_CURRENT, count=2)
+            r = await client.read_holding_registers(REG_SAFE_CURRENT, count=2, device_id=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["safe_current"] = r.registers[0]
                 data["comm_timeout"] = r.registers[1]
@@ -107,7 +107,9 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             # registers, high word first. Reading only the high word (as an
             # earlier revision did) yields 0 for realistic power and voltage
             # readings, because those fit entirely into the low word.
-            r = await client.read_holding_registers(REG_ENERGY_L1, count=METER_BLOCK_COUNT)
+            r = await client.read_holding_registers(
+                REG_ENERGY_L1, count=METER_BLOCK_COUNT, device_id=MODBUS_SLAVE_ID
+            )
             if not r.isError() and len(r.registers) >= METER_BLOCK_COUNT:
                 regs = r.registers
                 # Energy 200–205 [Wh] → kWh. L1 carries the meter total,
@@ -133,12 +135,12 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
                 data["voltage_l3"] = _to_int32(regs[26], regs[27])
 
             # Signaled current: 706 (1 register)
-            r = await client.read_holding_registers(REG_SIGNALED_CURRENT, count=1)
+            r = await client.read_holding_registers(REG_SIGNALED_CURRENT, count=1, device_id=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["signaled_current"] = r.registers[0]
 
             # Session data: 716-719 (2 x uint32)
-            r = await client.read_holding_registers(REG_SESSION_ENERGY, count=4)
+            r = await client.read_holding_registers(REG_SESSION_ENERGY, count=4, device_id=MODBUS_SLAVE_ID)
             if not r.isError() and len(r.registers) >= 4:
                 regs = r.registers
                 # Charged Energy: 716-717 [Wh] → kWh
@@ -147,22 +149,20 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
                 data["session_duration"] = _to_uint32(regs[2], regs[3])
 
             # HEMS limit (v1.5): 2000 (1 register)
-            r = await client.read_holding_registers(REG_HEMS_CURRENT_LIMIT, count=1)
+            r = await client.read_holding_registers(REG_HEMS_CURRENT_LIMIT, count=1, device_id=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["hems_current_limit"] = r.registers[0]
 
             # Phase Switch Mode: 2020 (1 register)
-            r = await client.read_holding_registers(REG_PHASE_SWITCH_MODE, count=1)
+            r = await client.read_holding_registers(REG_PHASE_SWITCH_MODE, count=1, device_id=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["phase_switch_mode"] = r.registers[0]
 
-            _LOGGER.debug("Successfully read %d registers", len(data))
             return data
 
         except UpdateFailed:
             raise
         except Exception as err:
-            _LOGGER.error("Modbus communication error: %s", err, exc_info=True)
             if self._client:
                 self._client.close()
                 self._client = None
@@ -171,7 +171,7 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
     async def write_register(self, address: int, value: int) -> bool:
         try:
             client = await self._get_client()
-            result = await client.write_register(address, value)
+            result = await client.write_register(address, value, device_id=MODBUS_SLAVE_ID)
             return not result.isError()
         except Exception as err:
             _LOGGER.error("Failed to write register %s = %s: %s", address, value, err)
@@ -186,42 +186,24 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             self._client = None
 
 
-class SessionDataCoordinator(DataUpdateCoordinator):
-    def __init__(
-        self, hass: HomeAssistant, host: str, password: str, price_per_kwh: float
-    ) -> None:
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}_sessions",
-            update_interval=timedelta(hours=1),
-        )
+class WallboxApiCoordinator(DataUpdateCoordinator):
+    """Base for the REST API coordinators.
+
+    Both REST coordinators refresh on demand only — the wallbox accepts a single
+    Modbus client and every REST call costs a full nonce/login round trip, so
+    polling them on a timer buys nothing. Home Assistant fetches once during
+    setup, afterwards the refresh buttons trigger an update.
+    """
+
+    def __init__(self, hass: HomeAssistant, name: str, host: str, api_port: int,
+                 password: str) -> None:
+        super().__init__(hass, _LOGGER, name=name, update_interval=None)
         self._host = host
         self._password = password
-        self._price = price_per_kwh
-        self._base_url = f"http://{host}/api/v1"
-        self._vehicles: dict[str, str] = {}
-
-    def set_price(self, price: float) -> None:
-        self._price = price
-
-    def set_vehicles(self, vehicles: dict[str, str]) -> None:
-        self._vehicles = vehicles
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        try:
-            async with aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=30)
-            ) as session:
-                token = await self._authenticate(session)
-                raw = await self._fetch_sessions(session, token)
-                return self._process(raw)
-        except UpdateFailed:
-            raise
-        except Exception as err:
-            raise UpdateFailed(f"Session API error: {err}") from err
+        self._base_url = f"http://{host}:{api_port}/api/v1"
 
     async def _authenticate(self, session: aiohttp.ClientSession) -> str:
+        """Fetch a single-use nonce and exchange the installer password for a token."""
         async with session.get(f"{self._base_url}/Nonce") as r:
             r.raise_for_status()
             nonce = (await r.text()).strip().strip('"')
@@ -237,6 +219,46 @@ class SessionDataCoordinator(DataUpdateCoordinator):
             if not token:
                 raise UpdateFailed("Authentication returned no token")
             return token
+
+
+class SessionDataCoordinator(WallboxApiCoordinator):
+    def __init__(
+        self, hass: HomeAssistant, host: str, api_port: int, password: str,
+        price_per_kwh: float
+    ) -> None:
+        super().__init__(hass, f"{DOMAIN}_sessions", host, api_port, password)
+        self._price = price_per_kwh
+        self._vehicles: dict[str, str] = {}
+        self._raw: list = []
+
+    def set_price(self, price: float) -> None:
+        self._price = price
+
+    def set_vehicles(self, vehicles: dict[str, str]) -> None:
+        self._vehicles = vehicles
+
+    @property
+    def vehicles(self) -> dict[str, str]:
+        """RFID → name mapping currently in effect."""
+        return self._vehicles
+
+    def reapply_vehicles(self) -> None:
+        """Recompute names and totals from cached data, without calling the API."""
+        if self._raw:
+            self.async_set_updated_data(self._process(self._raw))
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        try:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=30)
+            ) as session:
+                token = await self._authenticate(session)
+                self._raw = await self._fetch_sessions(session, token)
+                return self._process(self._raw)
+        except UpdateFailed:
+            raise
+        except Exception as err:
+            raise UpdateFailed(f"Session API error: {err}") from err
 
     async def _fetch_sessions(self, session: aiohttp.ClientSession, token: str) -> list:
         async with session.get(
@@ -302,4 +324,74 @@ class SessionDataCoordinator(DataUpdateCoordinator):
             "vehicle_totals": vehicle_totals,
             "last_session_kwh": sessions[0]["energy_kwh"] if sessions else 0.0,
             "last_vehicle": sessions[0]["vehicle"] if sessions else "",
+        }
+
+
+class SystemEventsCoordinator(WallboxApiCoordinator):
+    """Reads the wallbox event log over the REST API.
+
+    Replaces the command-line sensors and shell scripts of the earlier YAML setup.
+    The endpoint pages at 100 entries unless take= is given, so ask for the limit
+    explicitly and report the wallbox's own total alongside.
+    """
+
+    def __init__(
+        self, hass: HomeAssistant, host: str, api_port: int, password: str
+    ) -> None:
+        super().__init__(hass, f"{DOMAIN}_events", host, api_port, password)
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        try:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=60)
+            ) as session:
+                token = await self._authenticate(session)
+                return await self._fetch_events(session, token)
+        except UpdateFailed:
+            raise
+        except Exception as err:
+            raise UpdateFailed(f"System events API error: {err}") from err
+
+    async def _fetch_events(
+        self, session: aiohttp.ClientSession, token: str
+    ) -> dict[str, Any]:
+        async with session.get(
+            f"{self._base_url}/Nonce"
+        ) as r:  # the endpoint expects a fresh nonce alongside the token
+            r.raise_for_status()
+            nonce = (await r.text()).strip().strip('"')
+
+        async with session.get(
+            f"{self._base_url}/SystemEvents",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "X-Nonce": nonce,
+                "Cache-Control": "no-cache",
+            },
+            params={"skip": 0, "take": API_EVENT_LIMIT},
+        ) as r:
+            r.raise_for_status()
+            payload = await r.json()
+
+        raw = payload.get("list", []) if isinstance(payload, dict) else []
+        events = [
+            {
+                "timestamp": e.get("timestamp") or e.get("@t") or "",
+                # parsedSeverity carries the real level; "severity" is Error for
+                # every entry on protocol 1.5 firmware and cannot be used.
+                "level": e.get("parsedSeverity") or "Unknown",
+                "event_id": e.get("shortcutWithEventId") or "",
+                "description": e.get("description") or "",
+                "source": e.get("sourceContext") or "",
+            }
+            for e in raw
+        ]
+        events.sort(key=lambda e: e["timestamp"], reverse=True)
+
+        return {
+            "events": events,
+            "fetched": len(events),
+            "total": payload.get("count", len(events)) if isinstance(payload, dict) else len(events),
+            "levels": sorted({e["level"] for e in events if e["level"]}),
+            "event_ids": sorted({e["event_id"] for e in events if e["event_id"]}),
         }

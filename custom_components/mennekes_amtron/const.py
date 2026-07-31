@@ -1,19 +1,31 @@
 DOMAIN = "mennekes_amtron"
 MANUFACTURER = "Mennekes"
-MODEL = "AMTRON 4Business 730"
+# Fallback only — the actual model comes from the wallbox via /api/v1/PublicInfo.
+# The 4You 400/500 and 4Business 600/700 series share one Modbus register set.
+MODEL = "AMTRON 4You / 4Business"
 
 CONF_WALLBOX_HOST = "host"
 CONF_MODBUS_PORT = "modbus_port"
+CONF_API_PORT = "api_port"
 CONF_API_PASSWORD = "api_password"
 CONF_PRICE_PER_KWH = "price_per_kwh"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_VEHICLES = "vehicles"  # options key: {rfid: vehicle name}
 
 DEFAULT_MODBUS_PORT = 502
+DEFAULT_API_PORT = 80
 DEFAULT_SCAN_INTERVAL = 30
 DEFAULT_PRICE_PER_KWH = 0.29
+DEFAULT_API_TIMEOUT = 10  # seconds
+MODBUS_CONNECT_TIMEOUT = 5  # seconds
+
+# REST API
+API_EVENT_LIMIT = 300  # events fetched per call; the wallbox pages at 100 by default
+API_SESSION_LIMIT = 100
+EVENT_LEVELS = ("All", "Information", "Error")
+FILTER_ALL = "All"
 
 MODBUS_SLAVE_ID = 1
-MODBUS_CONNECT_TIMEOUT = 5  # seconds
 
 # Modbus register addresses (Protocol v1.5)
 REG_CP_STATUS = 104
@@ -24,24 +36,23 @@ REG_SAFE_CURRENT = 131
 REG_COMM_TIMEOUT = 132
 REG_OPERATOR_CURRENT_LIMIT = 134
 
-# Meter registers 200-227
+# Meter registers 200-227. Every meter value is an int32 spanning two
+# registers, so consecutive phases are 2 apart (Modbus doc v1.5, page 2).
 REG_ENERGY_L1 = 200
 REG_ENERGY_L2 = 202
 REG_ENERGY_L3 = 204
 REG_POWER_L1 = 206
 REG_POWER_L2 = 208
 REG_POWER_L3 = 210
+REG_CURRENT_L1 = 212  # mA
+REG_CURRENT_L2 = 214
+REG_CURRENT_L3 = 216
 REG_TOTAL_ENERGY = 218
 REG_TOTAL_POWER = 220
 REG_VOLTAGE_L1 = 222
 REG_VOLTAGE_L2 = 224
 REG_VOLTAGE_L3 = 226
-
-# Meter current in mA (registers 212-214)
-REG_CURRENT_L1 = 212
-REG_CURRENT_L2 = 214
-REG_CURRENT_L3 = 216
-METER_BLOCK_COUNT = 28  # registers 200-227
+METER_BLOCK_COUNT = 28  # 200-227
 
 # Charging session registers
 REG_SIGNALED_CURRENT = 706

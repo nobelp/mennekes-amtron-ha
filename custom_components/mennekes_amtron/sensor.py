@@ -23,13 +23,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
-    MANUFACTURER,
-    MODEL,
     CP_STATUS_MAP,
+    DOMAIN,
     VEHICLE_STATE_MAP,
 )
-from .coordinator import ModbusDataCoordinator, SessionDataCoordinator
+from .coordinator import (
+    ModbusDataCoordinator,
+    SessionDataCoordinator,
+    SystemEventsCoordinator,
+)
+from .entity import build_device_info
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -250,17 +253,9 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][entry.entry_id]
     modbus_coord: ModbusDataCoordinator = entry_data["modbus"]
     session_coord: SessionDataCoordinator = entry_data["sessions"]
-    public_info: dict = entry_data.get("public_info", {})
+    events_coord: SystemEventsCoordinator = entry_data["events"]
 
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, entry.entry_id)},
-        name="Mennekes AMTRON",
-        manufacturer=MANUFACTURER,
-        model=public_info.get("articleName", MODEL),
-        sw_version=public_info.get("currentVersion"),
-        serial_number=public_info.get("serialNumber"),
-        configuration_url=f"http://{entry.data['host']}",
-    )
+    device_info = build_device_info(entry, entry_data.get("public_info", {}))
 
     entities: list[SensorEntity] = [
         ModbusSensor(modbus_coord, description, device_info, entry.entry_id)
@@ -270,6 +265,8 @@ async def async_setup_entry(
         SessionSensor(session_coord, description, device_info, entry.entry_id)
         for description in SESSION_SENSORS
     ]
+    entities.append(SystemEventsSensor(events_coord, device_info, entry.entry_id))
+    entities.append(KnownVehiclesSensor(session_coord, device_info, entry.entry_id))
 
     async_add_entities(entities)
 
@@ -338,3 +335,68 @@ class SessionSensor(CoordinatorEntity[SessionDataCoordinator], SensorEntity):
         if desc.attr_fn and self.coordinator.data:
             return desc.attr_fn(self.coordinator.data)
         return None
+
+
+class SystemEventsSensor(CoordinatorEntity[SystemEventsCoordinator], SensorEntity):
+    """Event log of the wallbox. The list lives in the attributes for the dashboard."""
+
+    _attr_has_entity_name = True
+    _attr_name = "System Events"
+    _attr_icon = "mdi:text-box-search-outline"
+
+    def __init__(
+        self,
+        coordinator: SystemEventsCoordinator,
+        device_info: DeviceInfo,
+        entry_id: str,
+    ) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry_id}_system_events"
+        self._attr_device_info = device_info
+
+    @property
+    def native_value(self) -> int | None:
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.get("total")
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        data = self.coordinator.data
+        if not data:
+            return None
+        return {
+            "events": data.get("events", []),
+            "fetched": data.get("fetched", 0),
+            "levels": data.get("levels", []),
+            "event_ids": data.get("event_ids", []),
+        }
+
+
+class KnownVehiclesSensor(CoordinatorEntity[SessionDataCoordinator], SensorEntity):
+    """RFID tags that have a name assigned, for the configuration view."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Known Vehicles"
+    _attr_icon = "mdi:car-multiple"
+
+    def __init__(
+        self,
+        coordinator: SessionDataCoordinator,
+        device_info: DeviceInfo,
+        entry_id: str,
+    ) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry_id}_known_vehicles"
+        self._attr_device_info = device_info
+
+    @property
+    def native_value(self) -> int:
+        return len(self.coordinator.vehicles)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {
+            "vehicles": dict(self.coordinator.vehicles),
+            "vehicle_totals": (self.coordinator.data or {}).get("vehicle_totals", {}),
+        }

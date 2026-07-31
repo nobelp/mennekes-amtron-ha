@@ -15,7 +15,6 @@ from .const import (
     MANUFACTURER,
     MODEL,
     REG_HEMS_CURRENT_LIMIT,
-    REG_HEMS_POWER_LIMIT,
     REG_SAFE_CURRENT,
     REG_COMM_TIMEOUT,
 )

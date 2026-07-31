@@ -119,6 +119,8 @@ views:
     title: Summen
     icon: mdi:sigma
     entities:
+    - entity: button.mennekes_amtron_refresh_charging_history
+      name: Jetzt abrufen
     - entity: sensor.mennekes_amtron_total_sessions
       name: Ladevorgänge
     - entity: sensor.mennekes_amtron_total_charged_energy
@@ -195,26 +197,77 @@ views:
   path: wallbox-systemlogs
   icon: mdi:text-box-search-outline
   cards:
+  - type: horizontal-stack
+    cards:
+    - type: entities
+      title: Status
+      icon: mdi:database-clock
+      entities:
+      - entity: sensor.mennekes_amtron_system_events
+        name: Einträge
+      - entity: button.mennekes_amtron_refresh_system_events
+        name: Aktualisieren
+    - type: entities
+      title: Filter
+      icon: mdi:filter-variant
+      entities:
+      - entity: select.mennekes_amtron_event_level_filter
+        name: Level
+      - entity: select.mennekes_amtron_event_id_filter
+        name: Event-ID
+      - entity: text.mennekes_amtron_event_search
+        name: Beschreibung
   - type: markdown
     title: Systemereignisse
-    content: 'Dieser Reiter benötigt die optionalen Command-Line-Sensoren aus **SYSTEMLOGS_SETUP.md**.
-
-      Sie holen das Ereignisprotokoll über die REST-API der Wallbox ab — die Integration selbst
-
-      liest ausschließlich Modbus-Register und die Ladehistorie.
-
-
-      Nach der Einrichtung stehen `sensor.wallbox_system_events` und
-
-      `sensor.wallbox_system_logs` zur Verfügung; die Vollversion des Dashboards
-
-      (`wallbox_dashboard.yaml`) enthält den fertigen Reiter mit Filterleiste.'
+    content: "{% set events = state_attr('sensor.mennekes_amtron_system_events','events') %}\n{% set level\
+      \ = states('select.mennekes_amtron_event_level_filter') %}\n{% set evid = states('select.mennekes_amtron_event_id_filter')\
+      \ %}\n{% set needle = states('text.mennekes_amtron_event_search') | lower %}\n{% set skip = ['All',\
+      \ 'unknown', 'unavailable', ''] %}\n{% if events %}\n{% set ns = namespace(rows=[]) %}\n{% for e\
+      \ in events %}\n{% if (level in skip or e.level == level)\n   and (evid in skip or e.event_id ==\
+      \ evid)\n   and (needle in skip or needle in e.description | lower) %}\n{% set ns.rows = ns.rows\
+      \ + [e] %}\n{% endif %}\n{% endfor %}\n**{{ ns.rows | length }}** von {{ events | length }} geladenen\
+      \ Ereignissen (Wallbox insgesamt: {{ states('sensor.mennekes_amtron_system_events') }})\n\n| Zeit\
+      \ | Level | Event-ID | Beschreibung |\n|---|---|---|---|\n{% for e in ns.rows[:40] %}| {{ e.timestamp[:19]\
+      \ | replace('T',' ') }} | {{ e.level }} | {{ e.event_id }} | {{ e.description }} |\n{% endfor %}\n\
+      {% else %}\n*Noch keine Daten - Button Aktualisieren druecken.*\n{% endif %}"
 - title: Konfiguration
   path: wallbox-config
   icon: mdi:cog
   cards:
   - type: entities
-    title: Steuerung
+    title: Fahrzeug zuweisen
+    icon: mdi:card-account-details-outline
+    entities:
+    - entity: select.mennekes_amtron_rfid
+      name: RFID auswählen
+    - entity: text.mennekes_amtron_vehicle_name
+      name: Fahrzeugname
+    - entity: button.mennekes_amtron_assign_vehicle
+      name: Zuweisen
+  - type: markdown
+    title: Bekannte Fahrzeuge
+    content: '{% set v = state_attr(''sensor.mennekes_amtron_known_vehicles'',''vehicles'') %}
+
+      {% set totals = state_attr(''sensor.mennekes_amtron_known_vehicles'',''vehicle_totals'') %}
+
+      {% if v %}
+
+      | RFID | Fahrzeug | kWh | Kosten |
+
+      |---|---|---:|---:|
+
+      {% for rfid, name in v.items() %}{% set t = (totals or {}).get(name, {}) %}| `{{ rfid }}` | {{ name
+      }} | {{ ''%.1f'' | format(t.get(''kwh'', 0)) }} | {{ ''%.2f'' | format(t.get(''cost'', 0)) }} |
+
+      {% endfor %}
+
+      {% else %}
+
+      *Noch keine Zuordnung. RFID oben auswaehlen, Namen eingeben, Zuweisen druecken.*
+
+      {% endif %}'
+  - type: entities
+    title: Wallbox-Einstellungen
     icon: mdi:tune
     entities:
     - entity: number.mennekes_amtron_hems_current_limit
@@ -228,23 +281,23 @@ views:
     - entity: switch.mennekes_amtron_cp_availability
       name: Verfügbarkeit
   - type: entities
-    title: Integration
+    title: Daten & Integration
     icon: mdi:information-outline
     entities:
-    - entity: update.mennekes_amtron_wallbox_update
-      name: Update
+    - entity: button.mennekes_amtron_refresh_charging_history
+      name: Ladehistorie abrufen
     - entity: sensor.mennekes_amtron_sessions_summary
       name: Ladehistorie
+    - entity: sensor.mennekes_amtron_known_vehicles
+      name: Zugeordnete Fahrzeuge
+    - entity: update.mennekes_amtron_wallbox_update
+      name: Update
   - type: markdown
-    title: Einstellungen ändern
-    content: 'Strompreis und Aktualisierungsintervall werden nicht über Helfer gepflegt, sondern über
-
-      die Integration selbst:
+    title: Strompreis & Intervall
+    content: 'Strompreis und Aktualisierungsintervall werden über die Integration gepflegt:
 
 
       **Einstellungen → Geräte & Dienste → Mennekes AMTRON → Konfigurieren**
 
 
-      Die Fahrzeugzuordnung (RFID → Name) benötigt die optionalen Python-Scripts und Helfer
-
-      des YAML-Teils — siehe README.md.'
+      Die Ladehistorie wird nur auf Knopfdruck abgerufen — der Button oben löst sie aus.'

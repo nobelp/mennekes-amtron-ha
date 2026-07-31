@@ -17,13 +17,17 @@ Weboberfläche, ohne YAML-Dateien.
 Funktionen:
 
 - **Echtzeit-Monitoring** via Modbus TCP: Ladestatus, Spannung, Strom, Leistung, Energie
-- **Ladehistorie** via REST API: Sessions, Fahrzeugzuordnung, Kosten
+- **Ladehistorie** via REST API: Sessions, Kosten — Abruf auf Knopfdruck
+- **Systemereignisse** der Wallbox mit Filter nach Level, Event-ID und Freitext
+- **Fahrzeugzuordnung** per RFID direkt in der Integration, ohne Scripts oder Dateien
 - **Steuerung**: HEMS-Limit, Safe Current, Ladepause, Verfügbarkeit
 - **Dashboard** mit vier Reitern, wird mitgeliefert
 
 > Diese Seite beschreibt den **automatisierten Weg**: HACS, Konfigurationsdialog, Dashboard
-> einfügen — fertig. Wer zusätzlich Template-Sensoren, Fahrzeugzuordnung per RFID und
-> Systemereignis-Auswertung möchte, folgt der [manuellen Installation](INSTALLATION_MANUELL.md).
+> einfügen — fertig. Systemereignisse und RFID-Zuordnung sind seit Version 2.1.0 Teil der
+> Integration und brauchen keine YAML-Dateien mehr. Die
+> [manuelle Installation](INSTALLATION_MANUELL.md) wird nur noch für ApexCharts-Diagramme,
+> DLM-Karten und eigene Template-Sensoren gebraucht.
 
 ---
 
@@ -121,15 +125,37 @@ erscheinen keine Karten mit „Entität nicht gefunden". Ein Neustart ist nicht 
 | Reiter | URL | Inhalt |
 |---|---|---|
 | Übersicht | `/dashboard-wallbox/wallbox-main` | Status, aktuelle bzw. letzte Ladesession, Energie, Leistung, Spannung & Strom, gelesene Limits |
-| History | `/dashboard-wallbox/wallbox-history` | Summen, Monatstabelle, Verbrauch je Fahrzeug, letzte Ladevorgänge |
-| Systemereignisse | `/dashboard-wallbox/wallbox-systemlogs` | Hinweis zur optionalen Ereignisauswertung |
-| Konfiguration | `/dashboard-wallbox/wallbox-config` | HEMS-Limit, Safe Current, Timeout, Ladepause, Verfügbarkeit |
+| History | `/dashboard-wallbox/wallbox-history` | Summen, Monatstabelle, Verbrauch je Fahrzeug, letzte Ladevorgänge, Abruf-Button |
+| Systemereignisse | `/dashboard-wallbox/wallbox-systemlogs` | Ereignisliste der Wallbox mit Filter nach Level, Event-ID und Freitext |
+| Konfiguration | `/dashboard-wallbox/wallbox-config` | RFID-Zuordnung, bekannte Fahrzeuge, HEMS-Limit, Safe Current, Timeout, Ladepause, Verfügbarkeit |
 
 Die zweite mitgelieferte Datei `wallbox_dashboard.yaml` ist die **Vollversion** mit
 Systemereignis-Filter, DLM-Karten und Fahrzeugzuordnung. Sie setzt die
 [manuelle Installation](INSTALLATION_MANUELL.md) voraus; ohne diese bleiben ihre Karten leer. Ein
 Wechsel ist jederzeit möglich — einfach den Inhalt der anderen Datei im Rohkonfigurationseditor
 einsetzen, URLs und Seitenleisteneintrag bleiben unverändert.
+
+---
+
+## Fahrzeuge zuordnen und Daten abrufen
+
+Beides läuft über den Reiter **Konfiguration** — ohne Dateien, ohne Scripts:
+
+1. **RFID auswählen** — die Liste füllt sich automatisch aus der Ladehistorie
+2. **Fahrzeugname** eintragen
+3. **Zuweisen** drücken — die Zuordnung landet in den Optionen des Integrationseintrags und
+   erscheint sofort in der Karte „Bekannte Fahrzeuge" samt Verbrauch und Kosten
+
+**Ladehistorie und Systemereignisse werden nur auf Knopfdruck abgerufen**, dazu einmal beim Start
+von Home Assistant. Jeder Abruf kostet einen vollständigen Login an der Wallbox-API, ein Zeitplan
+brächte nichts. Die Buttons dafür:
+
+| Button | Wirkung |
+|---|---|
+| **Ladehistorie abrufen** (Reiter Konfiguration und History) | holt Sessions, Kosten und Monatssummen neu |
+| **Aktualisieren** (Reiter Systemereignisse) | holt das Ereignisprotokoll neu |
+
+Sind noch keine Daten geladen, zeigen die Tabellen einen entsprechenden Hinweis statt leerer Zeilen.
 
 ---
 

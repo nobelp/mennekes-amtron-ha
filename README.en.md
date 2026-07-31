@@ -17,13 +17,16 @@ interface, no YAML files required.
 Features:
 
 - **Real-time monitoring** via Modbus TCP: charging status, voltage, current, power, energy
-- **Charging history** via REST API: sessions, vehicle mapping, costs
+- **Charging history** via REST API: sessions, costs — fetched on button press
+- **System events** of the wallbox, filtered by level, event ID and free text
+- **Vehicle mapping** by RFID inside the integration, no scripts or files
 - **Control**: HEMS limit, safe current, charging pause, availability
 - **Dashboard** with four tabs, shipped with the integration
 
 > This page describes the **automated path**: HACS, configuration dialog, paste the dashboard —
-> done. If you also want template sensors, RFID-based vehicle mapping and system-event analysis,
-> follow the [manual installation](INSTALLATION_MANUAL.md).
+> done. System events and RFID mapping are part of the integration as of version 2.1.0 and no
+> longer need any YAML. The [manual installation](INSTALLATION_MANUAL.md) is only needed for
+> ApexCharts diagrams, DLM cards and your own template sensors.
 
 ---
 
@@ -119,15 +122,37 @@ No restart required.
 | Tab | URL | Content |
 |---|---|---|
 | Overview | `/dashboard-wallbox/wallbox-main` | Status, current or last charging session, energy, power, voltage & current, read-only limits |
-| History | `/dashboard-wallbox/wallbox-history` | Totals, monthly table, consumption per vehicle, recent sessions |
-| System events | `/dashboard-wallbox/wallbox-systemlogs` | Note on the optional event analysis |
-| Configuration | `/dashboard-wallbox/wallbox-config` | HEMS limit, safe current, timeout, charging pause, availability |
+| History | `/dashboard-wallbox/wallbox-history` | Totals, monthly table, consumption per vehicle, recent sessions, refresh button |
+| System events | `/dashboard-wallbox/wallbox-systemlogs` | Wallbox event list filtered by level, event ID and free text |
+| Configuration | `/dashboard-wallbox/wallbox-config` | RFID mapping, known vehicles, HEMS limit, safe current, timeout, charging pause, availability |
 
 The second shipped file, `wallbox_dashboard.yaml`, is the **full version** with system-event
 filters, DLM cards and vehicle mapping. It requires the
 [manual installation](INSTALLATION_MANUAL.md); without it those cards stay empty. You can switch at
 any time — just paste the other file's contents into the raw configuration editor, the URLs and the
 sidebar entry stay the same.
+
+---
+
+## Mapping vehicles and fetching data
+
+Both live in the **Configuration** tab — no files, no scripts:
+
+1. **Pick an RFID** — the list fills itself from the charging history
+2. Enter the **vehicle name**
+3. Press **Assign** — the mapping is stored in the integration's options and appears immediately
+   in the "Known vehicles" card together with consumption and cost
+
+**Charging history and system events are fetched on button press only**, plus once when Home
+Assistant starts. Every fetch costs a full login against the wallbox API, so a schedule would buy
+nothing. The buttons:
+
+| Button | Effect |
+|---|---|
+| **Refresh charging history** (Configuration and History tabs) | reloads sessions, costs and monthly totals |
+| **Refresh** (System events tab) | reloads the event log |
+
+While no data has been fetched yet, the tables show a hint instead of empty rows.
 
 ---
 

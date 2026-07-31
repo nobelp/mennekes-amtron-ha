@@ -8,6 +8,41 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.1.0] – 2026-07-31
+
+Systemereignisse und RFID-Zuordnung laufen jetzt ohne manuelle Installation.
+
+*System events and RFID assignment now work without the manual installation.*
+
+### Hinzugefügt / Added
+
+| Deutsch | English |
+|---------|---------|
+| Die Integration liest das Ereignisprotokoll selbst über `GET /api/v1/SystemEvents`. Der Sensor `sensor.mennekes_amtron_system_events` liefert die Gesamtzahl als Zustand und die Einträge als Attribut. Command-Line-Sensoren, `shell_command` und die Python-Scripts sind dafür nicht mehr nötig. | The integration reads the event log itself via `GET /api/v1/SystemEvents`. The `sensor.mennekes_amtron_system_events` sensor exposes the total as its state and the entries as an attribute. Command-line sensors, `shell_command` and the Python scripts are no longer needed for this. |
+| Filter für die Ereignisliste als Entitäten: `select.mennekes_amtron_event_level_filter`, `select.mennekes_amtron_event_id_filter` und `text.mennekes_amtron_event_search`. Die fünf YAML-Helfer entfallen. | Filters for the event list as entities: `select.mennekes_amtron_event_level_filter`, `select.mennekes_amtron_event_id_filter` and `text.mennekes_amtron_event_search`. The five YAML helpers are gone. |
+| RFID-Zuordnung in der Integration: `select.mennekes_amtron_rfid` füllt sich automatisch aus der Ladehistorie, `text.mennekes_amtron_vehicle_name` nimmt den Namen auf, `button.mennekes_amtron_assign_vehicle` speichert die Zuordnung. | RFID assignment inside the integration: `select.mennekes_amtron_rfid` fills itself from the charging history, `text.mennekes_amtron_vehicle_name` takes the name, `button.mennekes_amtron_assign_vehicle` stores the mapping. |
+| Die Zuordnung liegt in den Optionen des Konfigurationseintrags — kein `wallbox_vehicles.json`, keine Scripts. `sensor.mennekes_amtron_known_vehicles` zeigt sie samt Verbrauch je Fahrzeug. | The mapping lives in the config entry options — no `wallbox_vehicles.json`, no scripts. `sensor.mennekes_amtron_known_vehicles` shows it together with the consumption per vehicle. |
+| Buttons zum Abrufen: `button.mennekes_amtron_refresh_charging_history` und `button.mennekes_amtron_refresh_system_events`. | Refresh buttons: `button.mennekes_amtron_refresh_charging_history` and `button.mennekes_amtron_refresh_system_events`. |
+
+### Geändert / Changed
+
+| Deutsch | English |
+|---------|---------|
+| Ladehistorie und Systemereignisse werden **nur auf Knopfdruck** abgerufen, dazu einmal beim Start. Vorher lief die Historie stündlich. Jeder REST-Aufruf kostet einen vollständigen Nonce- und Login-Vorgang, deshalb bringt ein Timer nichts. | Charging history and system events are fetched **on button press only**, plus once at startup. The history previously ran hourly. Every REST call costs a full nonce and login round trip, so a timer buys nothing. |
+| Der Reiter Systemereignisse des mitgelieferten Dashboards zeigt die echte Ereignisliste mit Filterleiste statt eines Hinweistexts; der Konfigurations-Reiter enthält die RFID-Verwaltung. | The system events tab of the shipped dashboard shows the real event list with a filter bar instead of a placeholder note; the configuration tab contains the RFID management. |
+| Der Session-Coordinator nutzt den konfigurierten API-Port; er war fest auf Port 80 verdrahtet. | The session coordinator uses the configured API port; it was hardcoded to port 80. |
+| Eine Fahrzeugzuordnung lädt den Eintrag nicht mehr neu, sondern beschriftet die zwischengespeicherte Historie neu — ein Reload würde die einzige Modbus-Verbindung der Wallbox kappen. | Assigning a vehicle no longer reloads the entry but re-labels the cached history — a reload would drop the wallbox's single Modbus connection. |
+| Der Options-Dialog überschreibt die Fahrzeugzuordnung nicht mehr. | The options dialog no longer overwrites the vehicle mapping. |
+
+### Behoben / Fixed
+
+| Deutsch | English |
+|---------|---------|
+| Der Pfad für die Systemereignisse war falsch: `SystemManagement/SystemEvents` liefert HTTP 404, richtig ist `SystemEvents`. Ohne `take=` gibt die Wallbox nur 100 Einträge zurück. | The system events path was wrong: `SystemManagement/SystemEvents` returns HTTP 404, the correct one is `SystemEvents`. Without `take=` the wallbox only returns 100 entries. |
+| Der Level eines Ereignisses kommt aus `parsedSeverity`; das Feld `severity` meldet auf Firmware 1.5 bei jedem Eintrag `Error` und ist unbrauchbar. | The level of an event comes from `parsedSeverity`; the `severity` field reports `Error` for every entry on firmware 1.5 and is unusable. |
+
+---
+
 ## [2.0.0] – 2026-07-31
 
 Erste konsolidierte Version. Frühere Releases sind zurückgezogen.
