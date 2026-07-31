@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mennekes AMTRON Wallbox konfigurieren",
+        "description": "Geben Sie die Details Ihrer Mennekes AMTRON Wallbox ein.\nDie Wallbox muss über HTTP auf dem angegebenen API-Port erreichbar sein.",
+        "data": {
+          "host": "IP-Adresse oder Hostname der Wallbox",
+          "api_port": "API-Port (normalerweise 80)",
+          "password": "Installer-Passwort",
+          "modbus_port": "Modbus-Port (normalerweise 502)",
+          "electricity_price": "Strompreis (CHF/kWh)",
+          "scan_interval": "Aktualisierungsintervall (Sekunden, 1-3600)"
+        },
+        "data_description": {
+          "host": "z.B. 192.168.2.179 oder wallbox.local",
+          "api_port": "HTTP-API-Port für REST-Aufrufe",
+          "password": "Installer-Passwort für API-Authentifizierung",
+          "modbus_port": "TCP-Port für Modbus-Protokoll",
+          "electricity_price": "Wird für Kostenberechnungen verwendet",
+          "scan_interval": "Wie oft Sensorwerte aktualisiert werden"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zur Wallbox fehlgeschlagen. Überprüfen Sie IP-Adresse, Port und Netzwerkverbindung.",
+      "invalid_auth": "Authentifizierung fehlgeschlagen. Überprüfen Sie das Installer-Passwort.",
+      "timeout": "Verbindungs-Timeout. Die Wallbox ist möglicherweise nicht erreichbar oder reagiert langsam.",
+      "invalid_host": "Ungültiges Format der IP-Adresse oder des Hostnamens.",
+      "invalid_port": "Port muss eine Zahl zwischen 1 und 65535 sein.",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten. Überprüfen Sie die Logs für Details."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Mennekes AMTRON Optionen",
+        "description": "Aktualisieren Sie die Einstellungen für Ihre Wallbox-Integration.",
+        "data": {
+          "electricity_price": "Strompreis (CHF/kWh)",
+          "scan_interval": "Aktualisierungsintervall (Sekunden)"
+        }
+      }
+    }
+  }
+}

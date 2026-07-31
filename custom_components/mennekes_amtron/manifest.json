@@ -2,7 +2,7 @@
   "domain": "mennekes_amtron",
   "name": "Mennekes AMTRON Wallbox",
   "codeowners": ["@nobelp"],
-  "config_flow": false,
+  "config_flow": true,
   "documentation": "https://github.com/nobelp/mennekes-amtron-ha",
   "homeassistant": "2026.1.0",
   "iot_class": "local_polling",

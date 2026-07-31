@@ -2,8 +2,44 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configure Mennekes AMTRON",
-        "description": "Setup the Mennekes AMTRON Wallbox integration"
+        "title": "Configure Mennekes AMTRON Wallbox",
+        "description": "Enter the details of your Mennekes AMTRON wallbox.\nThe wallbox must be reachable via HTTP on the specified API port.",
+        "data": {
+          "host": "Wallbox IP Address or Hostname",
+          "api_port": "API Port (usually 80)",
+          "password": "Installer Password",
+          "modbus_port": "Modbus Port (usually 502)",
+          "electricity_price": "Electricity Price (CHF/kWh)",
+          "scan_interval": "Update Interval (seconds, 1-3600)"
+        },
+        "data_description": {
+          "host": "e.g., 192.168.2.179 or wallbox.local",
+          "api_port": "HTTP API port for REST calls",
+          "password": "Installer password for API authentication",
+          "modbus_port": "TCP port for Modbus protocol",
+          "electricity_price": "Used for cost calculations",
+          "scan_interval": "How often to update sensor values"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to wallbox. Check IP address, port, and network connectivity.",
+      "invalid_auth": "Authentication failed. Check the installer password.",
+      "timeout": "Connection timeout. Wallbox may be unreachable or slow to respond.",
+      "invalid_host": "Invalid IP address or hostname format.",
+      "invalid_port": "Port must be a number between 1 and 65535.",
+      "unknown": "An unexpected error occurred. Check the logs for details."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Mennekes AMTRON Options",
+        "description": "Update settings for your wallbox integration.",
+        "data": {
+          "electricity_price": "Electricity Price (CHF/kWh)",
+          "scan_interval": "Update Interval (seconds)"
+        }
       }
     }
   }
