@@ -1,100 +1,340 @@
-"""Sensor entities for Mennekes AMTRON."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import MennekesCoordinator
+from .const import (
+    DOMAIN,
+    MANUFACTURER,
+    MODEL,
+    CP_STATUS_MAP,
+    VEHICLE_STATE_MAP,
+)
+from .coordinator import ModbusDataCoordinator, SessionDataCoordinator
 
 
-SENSOR_MAP = [
-    # System Info
-    ("device_id", "Device ID", None, None),
-    ("firmware_version", "Firmware Version", None, None),
-    ("device_state", "Device State", None, None),
-    ("error_code", "Error Code", None, None),
+@dataclass(frozen=True, kw_only=True)
+class AmtronSensorDescription(SensorEntityDescription):
+    value_fn: Any = None
+    attr_fn: Any = None
 
-    # Voltages
-    ("voltage_l1", "Voltage L1", "V", SensorStateClass.MEASUREMENT),
-    ("voltage_l2", "Voltage L2", "V", SensorStateClass.MEASUREMENT),
-    ("voltage_l3", "Voltage L3", "V", SensorStateClass.MEASUREMENT),
 
-    # Currents (A - scaled from mA)
-    ("current_l1", "Current L1", "A", SensorStateClass.MEASUREMENT),
-    ("current_l2", "Current L2", "A", SensorStateClass.MEASUREMENT),
-    ("current_l3", "Current L3", "A", SensorStateClass.MEASUREMENT),
+MODBUS_SENSORS: tuple[AmtronSensorDescription, ...] = (
+    AmtronSensorDescription(
+        key="voltage_l1",
+        name="Voltage L1",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="voltage_l2",
+        name="Voltage L2",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="voltage_l3",
+        name="Voltage L3",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="current_l1",
+        name="Current L1",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="current_l2",
+        name="Current L2",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="current_l3",
+        name="Current L3",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="power_l1",
+        name="Power L1",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="power_l2",
+        name="Power L2",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="power_l3",
+        name="Power L3",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="total_power",
+        name="Total Power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="energy_l1",
+        name="Energy L1",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AmtronSensorDescription(
+        key="energy_l2",
+        name="Energy L2",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AmtronSensorDescription(
+        key="energy_l3",
+        name="Energy L3",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AmtronSensorDescription(
+        key="total_energy",
+        name="Total Energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AmtronSensorDescription(
+        key="session_energy",
+        name="Session Energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    AmtronSensorDescription(
+        key="session_duration",
+        name="Session Duration",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="signaled_current",
+        name="Signaled Current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="max_current_ev",
+        name="Max Current EV",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="cp_status",
+        name="Charging Status",
+        value_fn=lambda d: CP_STATUS_MAP.get(d.get("cp_status", 0), "Unknown"),
+    ),
+    AmtronSensorDescription(
+        key="vehicle_state",
+        name="Vehicle State",
+        value_fn=lambda d: VEHICLE_STATE_MAP.get(d.get("vehicle_state", 0), "Unknown"),
+    ),
+    AmtronSensorDescription(
+        key="hems_current_limit",
+        name="HEMS Current Limit",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="safe_current",
+        name="Safe Current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmtronSensorDescription(
+        key="phase_switch_mode",
+        name="Phase Switch Mode",
+        value_fn=lambda d: {
+            0: "1-Phase Only",
+            1: "3-Phase Only",
+            2: "Dynamic Phase Switch",
+            3: "Static (Start-Of-Session)",
+        }.get(d.get("phase_switch_mode", 0), "Unknown"),
+    ),
+)
 
-    # Power (W)
-    ("power_l1", "Power L1", "W", SensorStateClass.MEASUREMENT),
-    ("power_l2", "Power L2", "W", SensorStateClass.MEASUREMENT),
-    ("power_l3", "Power L3", "W", SensorStateClass.MEASUREMENT),
-    ("total_power", "Total Power", "W", SensorStateClass.MEASUREMENT),
-
-    # Energy (kWh - scaled from Wh)
-    ("total_energy", "Total Energy", "kWh", SensorStateClass.TOTAL_INCREASING),
-    ("session_energy", "Session Energy", "kWh", SensorStateClass.TOTAL_INCREASING),
-
-    # Charging
-    ("charge_state", "Charge State", None, None),
-    ("session_duration", "Session Duration", "s", SensorStateClass.MEASUREMENT),
-
-    # Control
-    ("hems_limit", "HEMS Limit", "A", SensorStateClass.MEASUREMENT),
-    ("safe_current", "Safe Current", "A", SensorStateClass.MEASUREMENT),
-    ("availability", "Availability", None, None),
-    ("plug_locked", "Plug Locked", None, None),
-]
+SESSION_SENSORS: tuple[AmtronSensorDescription, ...] = (
+    AmtronSensorDescription(
+        key="total_sessions",
+        name="Total Sessions",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AmtronSensorDescription(
+        key="total_kwh",
+        name="Total Charged Energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AmtronSensorDescription(
+        key="total_cost",
+        name="Total Cost",
+        native_unit_of_measurement="CHF",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    AmtronSensorDescription(
+        key="last_session_kwh",
+        name="Last Session Energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    AmtronSensorDescription(
+        key="last_vehicle",
+        name="Last Vehicle",
+    ),
+    AmtronSensorDescription(
+        key="sessions_summary",
+        name="Sessions Summary",
+        value_fn=lambda d: d.get("total_sessions", 0),
+        attr_fn=lambda d: {
+            "sessions": d.get("sessions", [])[:20],
+            "monthly_summary": d.get("monthly_summary", []),
+            "vehicle_totals": d.get("vehicle_totals", {}),
+        },
+    ),
+)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up sensor entities."""
-    coordinator: MennekesCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "coordinator"
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    modbus_coord: ModbusDataCoordinator = entry_data["modbus"]
+    session_coord: SessionDataCoordinator = entry_data["sessions"]
+    public_info: dict = entry_data.get("public_info", {})
+
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, entry.entry_id)},
+        name="Mennekes AMTRON",
+        manufacturer=MANUFACTURER,
+        model=public_info.get("articleName", MODEL),
+        sw_version=public_info.get("currentVersion"),
+        serial_number=public_info.get("serialNumber"),
+        configuration_url=f"http://{entry.data['host']}",
+    )
+
+    entities: list[SensorEntity] = [
+        ModbusSensor(modbus_coord, description, device_info, entry.entry_id)
+        for description in MODBUS_SENSORS
+    ]
+    entities += [
+        SessionSensor(session_coord, description, device_info, entry.entry_id)
+        for description in SESSION_SENSORS
     ]
 
-    sensors = [
-        MennekesSensor(coordinator, entry, key, name, unit, state_class)
-        for key, name, unit, state_class in SENSOR_MAP
-    ]
-
-    async_add_entities(sensors)
+    async_add_entities(entities)
 
 
-class MennekesSensor(CoordinatorEntity, SensorEntity):
-    """Generic Mennekes sensor."""
+class ModbusSensor(CoordinatorEntity[ModbusDataCoordinator], SensorEntity):
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: MennekesCoordinator,
-        entry: ConfigEntry,
-        key: str,
-        name: str,
-        unit: str | None,
-        state_class: str | None,
+        coordinator: ModbusDataCoordinator,
+        description: AmtronSensorDescription,
+        device_info: DeviceInfo,
+        entry_id: str,
     ) -> None:
-        """Initialize the sensor."""
         super().__init__(coordinator)
-        self._key = key
-        self._entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_{key}"
-        self._attr_name = f"Wallbox {name}"
-
-        if unit:
-            self._attr_native_unit_of_measurement = unit
-        if state_class:
-            self._attr_state_class = state_class
+        self.entity_description = description
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_device_info = device_info
 
     @property
     def native_value(self):
-        """Return the value."""
-        return self.coordinator.data.get(self._key, 0)
+        if not self.coordinator.data:
+            return None
+        desc = self.entity_description
+        if desc.value_fn:
+            return desc.value_fn(self.coordinator.data)
+        return self.coordinator.data.get(desc.key)
+
+    @property
+    def extra_state_attributes(self):
+        desc = self.entity_description
+        if desc.attr_fn and self.coordinator.data:
+            return desc.attr_fn(self.coordinator.data)
+        if desc.key == "cp_status" and self.coordinator.data:
+            return {"error_codes": self.coordinator.data.get("error_codes", [])}
+        return None
+
+
+class SessionSensor(CoordinatorEntity[SessionDataCoordinator], SensorEntity):
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: SessionDataCoordinator,
+        description: AmtronSensorDescription,
+        device_info: DeviceInfo,
+        entry_id: str,
+    ) -> None:
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_device_info = device_info
+
+    @property
+    def native_value(self):
+        if not self.coordinator.data:
+            return None
+        desc = self.entity_description
+        if desc.value_fn:
+            return desc.value_fn(self.coordinator.data)
+        return self.coordinator.data.get(desc.key)
+
+    @property
+    def extra_state_attributes(self):
+        desc = self.entity_description
+        if desc.attr_fn and self.coordinator.data:
+            return desc.attr_fn(self.coordinator.data)
+        return None

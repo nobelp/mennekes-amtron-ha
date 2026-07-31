@@ -1,111 +1,91 @@
-"""Config flow for Mennekes AMTRON Wallbox integration."""
-
-import logging
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant import config_entries
+from homeassistant.core import callback
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    CONF_WALLBOX_HOST,
+    CONF_MODBUS_PORT,
+    CONF_API_PASSWORD,
+    CONF_PRICE_PER_KWH,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_MODBUS_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_PRICE_PER_KWH,
+)
 
-_LOGGER = logging.getLogger(__name__)
+STEP_USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_WALLBOX_HOST): str,
+        vol.Optional(CONF_MODBUS_PORT, default=DEFAULT_MODBUS_PORT): int,
+        vol.Required(CONF_API_PASSWORD): str,
+        vol.Optional(CONF_PRICE_PER_KWH, default=DEFAULT_PRICE_PER_KWH): vol.Coerce(float),
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
+    }
+)
 
 
-class MennekesConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Mennekes AMTRON."""
-
+class MennekesAmtronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
-    async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> FlowResult:
-        """Handle the initial step."""
-        errors: Dict[str, str] = {}
+    async def async_step_user(self, user_input=None):
+        errors = {}
 
         if user_input is not None:
-            # Simple validation - no HTTP calls
-            host = user_input.get("host", "").strip()
-            port = user_input.get("api_port", 80)
+            host = user_input[CONF_WALLBOX_HOST].strip()
+            port = user_input[CONF_MODBUS_PORT]
 
-            if not host:
-                errors["host"] = "host_required"
-            elif not (1 <= port <= 65535):
-                errors["api_port"] = "invalid_port"
-            elif not user_input.get("password"):
-                errors["password"] = "password_required"
-            else:
-                try:
-                    await self.async_set_unique_id(host.lower())
-                    self._abort_if_unique_id_configured()
-                except Exception as err:
-                    _LOGGER.error("Error setting unique ID: %s", err)
-                    errors["base"] = "unknown_error"
-                else:
-                    return self.async_create_entry(
-                        title=f"Mennekes AMTRON - {host}",
-                        data=user_input,
-                    )
+            # Validate Modbus connection
+            try:
+                from pymodbus.client import AsyncModbusTcpClient
+                client = AsyncModbusTcpClient(host, port=port)
+                connected = await client.connect()
+                client.close()
+                if not connected:
+                    errors["base"] = "cannot_connect"
+            except Exception:
+                errors["base"] = "cannot_connect"
+
+            if not errors:
+                await self.async_set_unique_id(f"{host}:{port}")
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=f"Mennekes AMTRON ({host})",
+                    data={**user_input, CONF_WALLBOX_HOST: host},
+                )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("host"): str,
-                    vol.Optional("api_port", default=80): int,
-                    vol.Required("password"): str,
-                    vol.Optional("modbus_port", default=502): int,
-                    vol.Optional("electricity_price", default=0.29): vol.Coerce(
-                        float
-                    ),
-                    vol.Optional("scan_interval", default=30): vol.All(
-                        vol.Coerce(int), vol.Range(min=1, max=3600)
-                    ),
-                }
-            ),
+            data_schema=STEP_USER_SCHEMA,
             errors=errors,
         )
 
     @staticmethod
     @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Create the options flow."""
-        return MennekesOptionsFlow(config_entry)
+    def async_get_options_flow(config_entry):
+        return MennekesAmtronOptionsFlow(config_entry)
 
 
-class MennekesOptionsFlow(OptionsFlow):
-    """Handle options for Mennekes AMTRON."""
+class MennekesAmtronOptionsFlow(config_entries.OptionsFlow):
+    def __init__(self, config_entry) -> None:
+        self._entry = config_entry
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> FlowResult:
-        """Manage the options."""
+    async def async_step_init(self, user_input=None):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        "electricity_price",
-                        default=self.config_entry.data.get(
-                            "electricity_price", 0.29
-                        ),
-                    ): vol.Coerce(float),
-                    vol.Optional(
-                        "scan_interval",
-                        default=self.config_entry.data.get("scan_interval", 30),
-                    ): vol.All(
-                        vol.Coerce(int), vol.Range(min=1, max=3600)
-                    ),
-                }
-            ),
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_PRICE_PER_KWH,
+                    default=self._entry.data.get(CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH),
+                ): vol.Coerce(float),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=self._entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                ): int,
+            }
         )
+        return self.async_show_form(step_id="init", data_schema=schema)
