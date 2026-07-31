@@ -1,8 +1,10 @@
-# Mennekes AMTRON Wallbox – Home Assistant Integration
+# Mennekes AMTRON Wallbox – Manuelle Installation
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Release](https://img.shields.io/github/v/release/nobelp/mennekes-amtron-ha)](https://github.com/nobelp/mennekes-amtron-ha/releases)
+[Deutsch (Schnellstart)](README.md) · **Manuelle Installation (Deutsch)** · [English (quick start)](README.en.md) · [Manual installation (English)](INSTALLATION_MANUAL.md)
+
+> Diese Seite beschreibt die **vollständige manuelle Einrichtung** mit Template-Sensoren,
+> Helfern, Python-Scripts und der Vollversion des Dashboards. Für den automatisierten Weg über
+> HACS und den Konfigurationsdialog genügt der [Schnellstart](README.md).
 
 Vollständige Integration einer Mennekes AMTRON Wallbox in Home Assistant. Unterstützt das
 gesamte Portfolio **AMTRON 4You 400/500** und **AMTRON 4Business 600/700** — alle diese
@@ -16,34 +18,14 @@ Baureihen nutzen denselben Modbus-TCP-Registersatz (siehe [Unterstützte Modelle
 
 ## 📦 Installation
 
-### Option 1: HACS (Recommended)
+Die Installation der Integration selbst und der Konfigurationsdialog sind im
+**[Schnellstart](README.md)** beschrieben — inklusive HACS-Button und Screenshot des Dialogs.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nobelp&repository=mennekes-amtron-ha&category=integration)
-
-1. Klicke auf den HACS-Button oben oder navigiere zu **HACS → Integrationen**
-2. Suche nach **"Mennekes AMTRON"**
-3. Klicke **"Download"** und starte Home Assistant neu
-4. **Einrichten**: Gehe zu **Einstellungen → Geräte & Dienste → Integration hinzufügen**,
-   suche nach **"Mennekes AMTRON"** und fülle den Konfigurationsdialog aus:
-
-![Konfigurationsdialog der Mennekes AMTRON Integration mit den Feldern IP-Adresse, API-Port, Installer-Passwort, Modbus-Port, Strompreis und Aktualisierungsintervall](docs/images/config-flow-ui.png)
-
-| Feld | Bedeutung | Standard |
-|------|-----------|----------|
-| **IP-Adresse oder Hostname** | Adresse der Wallbox im Netzwerk (z. B. `192.168.2.179` oder `wallbox.local`) | – (Pflicht) |
-| **API-Port** | HTTP-Port für die REST-Aufrufe | `80` |
-| **Installer-Passwort** | Passwort des Installer-Zugangs für die API-Authentifizierung | – (Pflicht) |
-| **Modbus-Port** | TCP-Port des Modbus-Protokolls | `502` |
-| **Strompreis (CHF/kWh)** | Grundlage der Kostenberechnung | `0.29` |
-| **Aktualisierungsintervall** | Abstand der Sensor-Updates in Sekunden (1–3600) | `30` |
-
-### Option 2: Manuell
+Diese Seite setzt dort an, wo der Schnellstart endet: Repository klonen und die YAML-Bestandteile
+(Template-Sensoren, Helfer, Scripts, Automationen) einrichten.
 
 ```bash
-# Klone das Repository
 git clone https://github.com/nobelp/mennekes-amtron-ha.git ~/HA_Menneckes
-
-# Kopiere die Dateien nach Home Assistant (siehe "Vollständige Neu-Installation" unten)
 ```
 
 ---
@@ -1177,7 +1159,10 @@ ping 10.x.x.x
 
 ```
 /workspace/HA_Menneckes/                    (Quellcode / Entwicklung)
-├── README.md                               ← Diese Datei
+├── README.md                               ← Schnellstart (automatisiert)
+├── README.en.md                            ← quick start (English)
+├── INSTALLATION_MANUELL.md                 ← Diese Datei
+├── INSTALLATION_MANUAL.md                  ← this file in English
 ├── generate_dashboard.py                   ← überholt, siehe „Dashboard-Änderungen zurückspielen"
 ├── modbus_wallbox.yaml                     ← Modbus TCP Register-Map
 ├── input_number_wallbox.yaml               ← Numerische Input-Helper
@@ -1288,7 +1273,7 @@ muss Home Assistant neu gestartet werden, weil die Storage-Datei nur beim Start 
 Vor dem Support bitte prüfen:
 1. **Logs anschauen**: Settings → System → Logs (suche nach "wallbox")
 2. **diagnose.sh Script laufen**: `bash diagnose.sh`
-3. **QUICKSTART.md und README.md lesen** (umfangreiche Lösungsanleitungen vorhanden)
+3. **[Schnellstart](README.md) und diese Seite lesen** (umfangreiche Lösungsanleitungen vorhanden)
 
 ---
 
@@ -1296,7 +1281,7 @@ Vor dem Support bitte prüfen:
 
 - **GitHub Issues**: [nobelp/mennekes-amtron-ha/issues](https://github.com/nobelp/mennekes-amtron-ha/issues)
 - **Home Assistant Community**: [Home Assistant Discourse](https://discourse.home-assistant.io)
-- **Documentation**: Siehe `README.md`, `QUICKSTART.md`, `SYSTEMLOGS_SETUP.md`
+- **Dokumentation**: [Schnellstart](README.md), diese Seite, [`SYSTEMLOGS_SETUP.md`](SYSTEMLOGS_SETUP.md)
 
 ---
 
