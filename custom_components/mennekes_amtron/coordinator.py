@@ -146,7 +146,7 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
     async def write_register(self, address: int, value: int) -> bool:
         try:
             client = await self._get_client()
-            result = await client.write_register(address, value, device_id=MODBUS_SLAVE_ID)
+            result = await client.write_register(address, value, slave=MODBUS_SLAVE_ID)
             return not result.isError()
         except Exception as err:
             _LOGGER.error("Failed to write register %s = %s: %s", address, value, err)
