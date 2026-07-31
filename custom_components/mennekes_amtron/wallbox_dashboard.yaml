@@ -1,0 +1,61 @@
+title: Mennekes AMTRON Wallbox
+path: wallbox
+icon: mdi:ev-station
+
+views:
+  - title: Übersicht
+    path: wallbox-main
+    icon: mdi:lightning-bolt
+    cards:
+      - type: markdown
+        content: |
+          # 🔌 Mennekes AMTRON 4Business 730
+
+      - type: entities
+        title: ⚡ Status
+        entities:
+          - sensor.ocpp_cp_status
+          - sensor.vehicle_state
+          - sensor.wallbox_error_codes_text
+
+      - type: entities
+        title: 📊 Spannung (V)
+        entities:
+          - sensor.meter_voltage_l1
+          - sensor.meter_voltage_l2
+          - sensor.meter_voltage_l3
+
+      - type: entities
+        title: 🔌 Strom (mA)
+        entities:
+          - sensor.meter_current_l1
+          - sensor.meter_current_l2
+          - sensor.meter_current_l3
+
+      - type: entities
+        title: ⚙️ Leistung (W)
+        entities:
+          - sensor.meter_power_l1
+          - sensor.meter_power_l2
+          - sensor.meter_power_l3
+          - sensor.meter_total_power
+
+      - type: entities
+        title: 🔋 Energie (Wh)
+        entities:
+          - sensor.meter_energy_l1
+          - sensor.meter_energy_l2
+          - sensor.meter_energy_l3
+          - sensor.meter_total_energy
+
+      - type: entities
+        title: 🛠️ HEMS Steuerung
+        entities:
+          - input_number.wallbox_hems_current_limit
+          - input_boolean.wallbox_pause_charging
+
+      - type: entities
+        title: 🔄 DLM
+        entities:
+          - sensor.dlm_mode
+          - sensor.dlm_num_slaves_connected
