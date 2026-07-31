@@ -30,7 +30,7 @@ class MennekesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await self.async_step_validate_input(user_input)
+                await self._async_validate_input(user_input)
                 await self.async_set_unique_id(
                     user_input.get("host", "").lower()
                 )
@@ -72,8 +72,7 @@ class MennekesConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    @staticmethod
-    async def async_step_validate_input(user_input: Dict[str, Any]) -> None:
+    async def _async_validate_input(self, user_input: Dict[str, Any]) -> None:
         """Validate the user input allows us to connect."""
         host = user_input.get("host", "").strip()
         port = user_input.get(CONF_API_PORT, DEFAULT_API_PORT)
@@ -89,7 +88,7 @@ class MennekesConfigFlow(ConfigFlow, domain=DOMAIN):
             raise vol.Invalid("password is required")
 
         try:
-            session = aiohttp_client.async_get_clientsession(None)
+            session = aiohttp_client.async_get_clientsession(self.hass)
             url = f"http://{host}:{port}/api/v1/PublicInfo"
 
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=DEFAULT_API_TIMEOUT)) as response:
