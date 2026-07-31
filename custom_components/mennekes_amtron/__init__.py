@@ -4,10 +4,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .coordinator import MennekesCoordinator
 
-VERSION = "1.4.2"
+VERSION = "1.5.0"
 
-PLATFORMS = []
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -18,13 +19,20 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Mennekes AMTRON from a config entry."""
+    coordinator = MennekesCoordinator(
+        hass,
+        host=entry.data.get("host"),
+        api_port=entry.data.get("api_port", 80),
+        modbus_port=entry.data.get("modbus_port", 502),
+        password=entry.data.get("password"),
+        scan_interval=entry.data.get("scan_interval", 30),
+    )
+
+    await coordinator.async_config_entry_first_refresh()
+
     hass.data[DOMAIN][entry.entry_id] = {
-        "host": entry.data.get("host"),
-        "api_port": entry.data.get("api_port", 80),
-        "password": entry.data.get("password"),
-        "modbus_port": entry.data.get("modbus_port", 502),
+        "coordinator": coordinator,
         "electricity_price": entry.data.get("electricity_price", 0.29),
-        "scan_interval": entry.data.get("scan_interval", 30),
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -35,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN].pop(entry.entry_id, None)
     return True
 
