@@ -1158,7 +1158,6 @@ ping 10.x.x.x
 ├── README.en.md                            ← quick start (English)
 ├── INSTALLATION_MANUELL.md                 ← manual installation (German)
 ├── INSTALLATION_MANUAL.md                  ← this file
-├── generate_dashboard.py                   ← superseded, see "Pushing dashboard changes back"
 ├── modbus_wallbox.yaml                     ← Modbus TCP register map
 ├── input_number_wallbox.yaml               ← Numeric input helpers
 ├── input_boolean_wallbox.yaml              ← Boolean input helpers
@@ -1170,14 +1169,11 @@ ping 10.x.x.x
 │   ├── ...                                 ← integration (installed by HACS)
 │   └── dashboards/
 │       └── wallbox_dashboard.yaml          ← dashboard raw configuration, 4 tabs (source)
-├── dashboards/
-│   └── wallbox_dashboard.yaml              ← identical copy of the file above
 ├── python_scripts/
 │   ├── fetch_charging_sessions.py          ← REST API fetch (main script)
 │   ├── run_wallbox_fetch.sh                ← Wrapper (password not in repo)
 │   ├── write_vehicles.py                   ← Writes vehicles.json (4-slot method)
 │   └── assign_vehicle.py                   ← Writes vehicles.json (dropdown method)
-├── VERSION
 ├── LICENSE
 └── .gitignore
 
@@ -1218,18 +1214,12 @@ like this:
 2. Copy the entire content
 3. Paste it into `custom_components/mennekes_amtron/dashboards/wallbox_dashboard.yaml` below the
    comment header
-4. Keep the copy in sync:
-   ```bash
-   cd /workspace/HA_Menneckes
-   cp custom_components/mennekes_amtron/dashboards/wallbox_dashboard.yaml dashboards/
-   ```
 
 After option A no HA restart is needed, a `Shift`+`F5` in the browser is enough. After option B
 Home Assistant has to be restarted, because the storage file is only read at startup.
 
-> **`generate_dashboard.py` is superseded.** The script produced its own, older variant of the
-> dashboard and is no longer the source of the shipped definition. It stays in the repository for
-> now, but no installation step uses it any more.
+> The former generator `generate_dashboard.py` has been dropped — the two shipped YAML files are
+> the single source.
 
 ---
 
@@ -1267,8 +1257,7 @@ Home Assistant has to be restarted, because the storage file is only read at sta
 
 Before requesting support, please check:
 1. **View logs**: Settings → System → Logs (search for "wallbox")
-2. **Run diagnose.sh script**: `bash diagnose.sh`
-3. **Read the [quick start](README.en.md) and this page** (comprehensive troubleshooting guides available)
+2. **Read the [quick start](README.en.md) and this page** (comprehensive troubleshooting guides available)
 
 ---
 

@@ -1163,7 +1163,6 @@ ping 10.x.x.x
 ├── README.en.md                            ← quick start (English)
 ├── INSTALLATION_MANUELL.md                 ← Diese Datei
 ├── INSTALLATION_MANUAL.md                  ← this file in English
-├── generate_dashboard.py                   ← überholt, siehe „Dashboard-Änderungen zurückspielen"
 ├── modbus_wallbox.yaml                     ← Modbus TCP Register-Map
 ├── input_number_wallbox.yaml               ← Numerische Input-Helper
 ├── input_boolean_wallbox.yaml              ← Boolean Input-Helper
@@ -1176,14 +1175,11 @@ ping 10.x.x.x
 │   └── dashboards/
 │       ├── wallbox_dashboard_integration.yaml  ← Variante 2: nur Integrations-Entitäten
 │       └── wallbox_dashboard.yaml          ← Vollversion, 4 Reiter (Quelle)
-├── dashboards/
-│   └── wallbox_dashboard.yaml              ← inhaltsgleiche Kopie der Datei oben
 ├── python_scripts/
 │   ├── fetch_charging_sessions.py          ← REST API Fetch (Haupt-Script)
 │   ├── run_wallbox_fetch.sh                ← Wrapper (Passwort nicht im Repo)
 │   ├── write_vehicles.py                   ← Schreibt vehicles.json (4-Slot-Methode)
 │   └── assign_vehicle.py                   ← Schreibt vehicles.json (Dropdown-Methode)
-├── VERSION
 ├── LICENSE
 └── .gitignore
 
@@ -1223,18 +1219,12 @@ Repository:
 1. Dashboard öffnen → Stift → ⋮ → **Rohkonfigurationseditor**
 2. Gesamten Inhalt kopieren
 3. In die passende der beiden Dateien unterhalb des Kommentarkopfes einsetzen
-4. Bei Änderungen an der Vollversion die Kopie synchron halten:
-   ```bash
-   cd /workspace/HA_Menneckes
-   cp custom_components/mennekes_amtron/dashboards/wallbox_dashboard.yaml dashboards/
-   ```
 
 Nach Variante A ist kein HA-Neustart nötig, ein `Shift`+`F5` im Browser genügt. Nach Variante B
 muss Home Assistant neu gestartet werden, weil die Storage-Datei nur beim Start gelesen wird.
 
-> **`generate_dashboard.py` ist überholt.** Das Script erzeugte eine eigene, ältere Variante des
-> Dashboards und ist nicht mehr die Quelle der ausgelieferten Definition. Es bleibt vorerst im
-> Repository, wird aber von keinem Installationsschritt mehr verwendet.
+> Der frühere Generator `generate_dashboard.py` ist entfallen — die beiden ausgelieferten
+> YAML-Dateien sind die einzige Quelle.
 
 ---
 
@@ -1272,8 +1262,7 @@ muss Home Assistant neu gestartet werden, weil die Storage-Datei nur beim Start 
 
 Vor dem Support bitte prüfen:
 1. **Logs anschauen**: Settings → System → Logs (suche nach "wallbox")
-2. **diagnose.sh Script laufen**: `bash diagnose.sh`
-3. **[Schnellstart](README.md) und diese Seite lesen** (umfangreiche Lösungsanleitungen vorhanden)
+2. **[Schnellstart](README.md) und diese Seite lesen** (umfangreiche Lösungsanleitungen vorhanden)
 
 ---
 

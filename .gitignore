@@ -40,10 +40,29 @@ wallbox_dashboard_*.json
 *.backup
 configuration.yaml.*.bak
 
-# Temporary scripts and docs (only backup files are ignored)
+# Temporary scripts and docs
 convert_yaml_to_dashboard.py.backup
-generate_dashboard.py.backup
 python_scripts/test.py
 
-# Note: QUICKSTART.md, setup.sh, SYSTEMLOGS_SETUP.md, diagnose.sh are kept
-# in version control for user reference (with anonymized content)
+# Development and deployment helpers — not part of the integration,
+# must not be published
+diagnose.sh
+setup.sh
+deploy_to_hassio.sh
+generate_dashboard.py
+generate_dashboard.py.backup
+
+# Internal working documents
+MIGRATION_MAPPING.md
+HACS_READINESS_REPORT.md
+NEXT_STEPS.md
+
+# Superseded: the version is declared in custom_components/*/manifest.json
+VERSION
+
+# Superseded: the dashboards ship inside the integration at
+# custom_components/mennekes_amtron/dashboards/
+/dashboards/
+
+# The repository README is the documentation; no duplicate inside the component
+custom_components/mennekes_amtron/README.md

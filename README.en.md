@@ -1,4 +1,5 @@
 # Mennekes AMTRON Wallbox – Home Assistant Integration
+### for AMTRON 4You 400 · 4You 500 · 4Business 600 · 4Business 700
 
 [Deutsch (Schnellstart)](README.md) · [Manuelle Installation (Deutsch)](INSTALLATION_MANUELL.md) · **English (quick start)** · [Manual installation](INSTALLATION_MANUAL.md)
 
@@ -7,7 +8,13 @@
 [![GitHub Release](https://img.shields.io/github/v/release/nobelp/mennekes-amtron-ha)](https://github.com/nobelp/mennekes-amtron-ha/releases)
 
 Integrates a Mennekes AMTRON wallbox into Home Assistant — set up entirely through the web
-interface, no YAML files required:
+interface, no YAML files required.
+
+> **All AMTRON 4You 400 and 500 as well as 4Business 600 and 700 communicate identically.** They
+> use the same Modbus TCP register set, so this integration's compatibility covers the entire
+> portfolio — including sub-variants such as the 4Business 730 or the 4You 550.
+
+Features:
 
 - **Real-time monitoring** via Modbus TCP: charging status, voltage, current, power, energy
 - **Charging history** via REST API: sessions, vehicle mapping, costs
