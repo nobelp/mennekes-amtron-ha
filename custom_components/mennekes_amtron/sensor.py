@@ -13,6 +13,45 @@ from .const import DOMAIN
 from .coordinator import MennekesCoordinator
 
 
+SENSOR_MAP = [
+    # System Info
+    ("device_id", "Device ID", None, None),
+    ("firmware_version", "Firmware Version", None, None),
+    ("device_state", "Device State", None, None),
+    ("error_code", "Error Code", None, None),
+
+    # Voltages
+    ("voltage_l1", "Voltage L1", "V", SensorStateClass.MEASUREMENT),
+    ("voltage_l2", "Voltage L2", "V", SensorStateClass.MEASUREMENT),
+    ("voltage_l3", "Voltage L3", "V", SensorStateClass.MEASUREMENT),
+
+    # Currents (mA)
+    ("current_l1", "Current L1", "mA", SensorStateClass.MEASUREMENT),
+    ("current_l2", "Current L2", "mA", SensorStateClass.MEASUREMENT),
+    ("current_l3", "Current L3", "mA", SensorStateClass.MEASUREMENT),
+
+    # Power (W)
+    ("power_l1", "Power L1", "W", SensorStateClass.MEASUREMENT),
+    ("power_l2", "Power L2", "W", SensorStateClass.MEASUREMENT),
+    ("power_l3", "Power L3", "W", SensorStateClass.MEASUREMENT),
+    ("total_power", "Total Power", "W", SensorStateClass.MEASUREMENT),
+
+    # Energy (Wh)
+    ("total_energy", "Total Energy", "Wh", SensorStateClass.TOTAL_INCREASING),
+    ("session_energy", "Session Energy", "Wh", SensorStateClass.TOTAL_INCREASING),
+
+    # Charging
+    ("charge_state", "Charge State", None, None),
+    ("session_duration", "Session Duration", "s", SensorStateClass.MEASUREMENT),
+
+    # Control
+    ("hems_limit", "HEMS Limit", "A", SensorStateClass.MEASUREMENT),
+    ("safe_current", "Safe Current", "A", SensorStateClass.MEASUREMENT),
+    ("availability", "Availability", None, None),
+    ("plug_locked", "Plug Locked", None, None),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -24,42 +63,38 @@ async def async_setup_entry(
     ]
 
     sensors = [
-        MennekesStatusSensor(coordinator, entry),
-        MennekesPowerSensor(coordinator, entry),
+        MennekesSensor(coordinator, entry, key, name, unit, state_class)
+        for key, name, unit, state_class in SENSOR_MAP
     ]
 
     async_add_entities(sensors)
 
 
-class MennekesStatusSensor(CoordinatorEntity, SensorEntity):
-    """Status sensor."""
+class MennekesSensor(CoordinatorEntity, SensorEntity):
+    """Generic Mennekes sensor."""
 
-    def __init__(self, coordinator: MennekesCoordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        coordinator: MennekesCoordinator,
+        entry: ConfigEntry,
+        key: str,
+        name: str,
+        unit: str | None,
+        state_class: str | None,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self._key = key
         self._entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_status"
-        self._attr_name = "Wallbox Status"
+        self._attr_unique_id = f"{entry.entry_id}_{key}"
+        self._attr_name = f"Wallbox {name}"
+
+        if unit:
+            self._attr_native_unit_of_measurement = unit
+        if state_class:
+            self._attr_state_class = state_class
 
     @property
-    def native_value(self) -> str:
-        """Return the status."""
-        return self.coordinator.data.get("status", "unknown")
-
-
-class MennekesPowerSensor(CoordinatorEntity, SensorEntity):
-    """Power sensor."""
-
-    def __init__(self, coordinator: MennekesCoordinator, entry: ConfigEntry) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_power"
-        self._attr_name = "Wallbox Power"
-        self._attr_native_unit_of_measurement = "W"
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-
-    @property
-    def native_value(self) -> int:
-        """Return the power."""
-        return self.coordinator.data.get("power", 0)
+    def native_value(self):
+        """Return the value."""
+        return self.coordinator.data.get(self._key, 0)

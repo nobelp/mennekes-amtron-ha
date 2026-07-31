@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import MennekesCoordinator
 
-VERSION = "1.5.0"
+VERSION = "1.6.0"
 
 PLATFORMS = ["sensor"]
 
