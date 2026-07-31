@@ -1257,9 +1257,10 @@ muss Home Assistant neu gestartet werden, weil die Storage-Datei nur beim Start 
 2. **Schreibzugriff**: Erfordert Modbus TCP im Read-and-Write-Modus (Register 2010 = `2`).
    Register 124 (Charge Point Availability) ist laut Dokumentation nur lesbar — der
    Verfügbarkeits-Schalter kann darauf nicht schreiben.
-3. **Wartungszustand**: Solange die Wallbox über `GET /api/v1/Status` den `systemStatus`
-   `UpdateInProgress` meldet, weist sie jede Modbus-Verbindung ab. Home Assistant zeigt dann
-   „Einrichtungsfehler, wird erneut versucht" und verbindet sich nach Abschluss selbstständig.
+3. **Nur ein Modbus-Client**: Die Wallbox bedient genau eine Modbus-TCP-Verbindung. Jeder
+   weitere Client wird nach dem TCP-Handshake sofort getrennt. `systemStatus: UpdateInProgress`
+   in der Wallbox-API ist dafür **nicht** die Ursache — in diesem Zustand liefert sie normal
+   weiter; der Wert kann dauerhaft anstehen und übersteht einen Neustart.
 4. **REST API**: Benötigt Installer-Passwort (nicht User-Passwort)
 5. **Dashboard**: Benötigt `apexcharts-card` vom HACS
 

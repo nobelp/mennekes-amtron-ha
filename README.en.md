@@ -172,9 +172,12 @@ You can check this from any machine: if the wallbox accepts the TCP connection a
 immediately, the slot is taken.
 
 **Sensors read 0 or "unavailable"** — enable Modbus TCP on the device (register `2010` must report
-`1` or `2`). After a firmware update the wallbox may report `systemStatus: UpdateInProgress` for
-several minutes and reject every Modbus connection during that time; Home Assistant reconnects on
-its own afterwards.
+`1` or `2`).
+
+**`systemStatus: UpdateInProgress` in the wallbox API** is not a reason for refused Modbus
+connections — the wallbox keeps serving normally in that state. The value can persist and even
+survives a reboot; it then points at a stuck firmware update and is a case for the manufacturer's
+support.
 
 **The availability switch does nothing** — register 124 is read-only in protocol version 1.5
 according to the manufacturer documentation.

@@ -1252,9 +1252,10 @@ Home Assistant has to be restarted, because the storage file is only read at sta
 2. **Write access**: Requires Modbus TCP in read-and-write mode (register 2010 = `2`).
    Register 124 (charge point availability) is documented as read-only — the availability
    switch cannot write to it.
-3. **Maintenance state**: While the wallbox reports `systemStatus` `UpdateInProgress` via
-   `GET /api/v1/Status`, it rejects every Modbus connection. Home Assistant then shows
-   "Error setting up, retrying" and reconnects on its own once the state clears.
+3. **A single Modbus client**: the wallbox serves exactly one Modbus TCP connection. Every
+   further client is disconnected right after the TCP handshake. `systemStatus: UpdateInProgress`
+   in the wallbox API is **not** the cause — it keeps serving normally in that state, and the
+   value can persist and survive a reboot.
 4. **REST API**: Requires installer password (not user password)
 5. **Dashboard**: Requires `apexcharts-card` from HACS
 

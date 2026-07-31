@@ -175,9 +175,12 @@ Prüfen lässt sich das von einem beliebigen Rechner aus: nimmt die Wallbox die 
 trennt sie sofort wieder, ist der Slot belegt.
 
 **Sensoren zeigen 0 oder „unavailable"** — Modbus TCP am Gerät aktivieren (Register `2010`
-muss `1` oder `2` melden). Nach einem Firmware-Update kann die Wallbox mehrere Minuten
-`systemStatus: UpdateInProgress` melden und in dieser Zeit alle Modbus-Verbindungen abweisen; Home
-Assistant verbindet sich danach selbstständig.
+muss `1` oder `2` melden).
+
+**`systemStatus: UpdateInProgress` in der Wallbox-API** ist kein Grund für abgewiesene
+Modbus-Verbindungen — die Wallbox bedient in diesem Zustand normal weiter. Der Wert kann dauerhaft
+anstehen und übersteht auch einen Neustart; er deutet dann auf ein hängendes Firmware-Update hin und
+ist ein Fall für den Hersteller-Support.
 
 **Der Verfügbarkeits-Schalter reagiert nicht** — Register 124 ist in Protokollversion 1.5 laut
 Herstellerdokumentation nur lesbar.

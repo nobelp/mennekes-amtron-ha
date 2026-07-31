@@ -69,10 +69,10 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             self._client = None
             raise UpdateFailed(
                 f"No Modbus TCP connection to {self._host}:{self._port} — the wallbox "
-                "refused or immediately closed the session. Check that Modbus TCP is "
-                "enabled and that no other client holds the single allowed connection. "
-                "The wallbox also rejects Modbus while its API reports "
-                "systemStatus 'UpdateInProgress'."
+                "accepted the TCP handshake and closed it again. It serves a single "
+                "Modbus client at a time, so check for a second Home Assistant instance, "
+                "a YAML 'modbus:' block polling the same wallbox, or an external energy "
+                "manager holding the connection. Verify Modbus TCP is enabled as well."
             )
 
         return self._client
