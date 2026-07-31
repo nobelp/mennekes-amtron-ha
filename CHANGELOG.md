@@ -1,134 +1,54 @@
-# Changelog — Mennekes AMTRON Home Assistant Integration
+# Changelog
 
-Alle wichtigen Änderungen an diesem Projekt werden hier dokumentiert.
+Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
+[Semantic Versioning](https://semver.org/lang/de/).
 
----
-
-## [1.1.1] – 2026-07-15
-
-### Added
-- 🔧 **Modbus v1.5 Protocol Support** – Neue Custom Component Integration mit korrekten Register-Adressen
-- 🆕 **Phase Switch Mode Sensor** – Unterstützung für dynamische Phasenumschaltung (11kW Geräte)
-- 📊 **Corrected Meter Values** – Richtige int32 Register-Byte-Reihenfolge für exakte Energiemessung
-- 🎁 **New HEMS v1.5 Support** – HEMS Current Limit mit 0.1A Schritte (Register 2000 statt 1000)
-
-### Fixed
-- 🐛 **Energy Calculation** – Korrekte Umrechnung von Wh zu kWh (int32 Byte-Reihenfolge)
-- 🔌 **Register Mapping** – Voltage/Current/Power Register gemäß v1.5 Dokumentation (222-227 statt 200-202)
-- 📋 **Session Data** – Korrigierte Register für Charged Energy (716 statt 705) und Charging Duration (718 statt 709)
-
-### Changed
-- 📝 **Documentation** – Entfernt: Home Assistant Quality Scale Kapitel
-- 📚 **Sensor Documentation** – Ergänzt: Alle v1.5 Integration Sensoren mit genauen Registeradressen
-- ⚡ **Deprecated Registers** – YAML Modbus liest nun nur noch v1.5 konforme Register
-
-### Technical Details
-- **Protocol Version**: 1.5 (AMTRON 4You500/4Business700)
-- **Compatible Models**: 4You 400/500, 4Business 600/700 (identische Kommunikation)
-- **Integration Type**: Custom Component (mennekes_amtron)
-- **Breaking Changes**: Old modbus_wallbox.yaml deprecated; use custom component instead
+*All notable changes to this project. Versioning follows
+[Semantic Versioning](https://semver.org/).*
 
 ---
 
-## [1.1.0] – 2026-06-24
+## [2.0.0] – 2026-07-31
 
-### Added
-- 🎁 **HACS Official Support** – Vollständige HACS-Integration mit `hacs.json`
-- 🔐 **Security Hardening** – Alle hardcoded IPs und Passwörter anonymisiert (192.x.x.x, MUSTER_PASSWORD)
-- ✅ **GitHub Actions Workflows**:
-  - HACS Validation (automatische Überprüfung)
-  - YAML/JSON Linting
-  - Security Checks (keine Secrets geleakt)
-  - Version Validation
-  - Release Automation
-- 📚 **Enhanced Documentation**:
-  - HACS Installation Guide
-  - Home Assistant Quality Scale Assessment
-  - Known Limitations & Supported Devices
-  - Improved Troubleshooting Section
-- 🔧 **Environment Variable Support** – Alle IPs und Passwörter via `.env` konfigurierbar
-- 🏷️ **Version Badges** – GitHub Release, License, HACS Badges in README
+Erste konsolidierte Version. Frühere Releases sind zurückgezogen.
 
-### Changed
-- 📝 **Anonymous Configuration** – IPs und Passwörter in Dokumentation durch Platzhalter ersetzt
-- 📂 **.gitignore Update** – QUICKSTART.md, setup.sh, SYSTEMLOGS_SETUP.md, diagnose.sh sind nun versioniert (mit anonymisierten Inhalten)
-- 🔄 **Improved Shell Scripts** – run_wallbox_fetch_logs.sh nutzt nun Umgebungsvariablen statt hardcoded Passwörter
-- 📊 **Enhanced diagnose.sh** – Nutzt WALLBOX_URL Umgebungsvariable statt hardcoded IP
+*First consolidated release. Earlier releases have been withdrawn.*
 
-### Fixed
-- 🔐 **Security Issue**: Echtes Installer-Passwort aus QUICKSTART.md, setup.sh und run_wallbox_fetch_logs.sh entfernt
-- 🐛 **Dokumentation**: Alle hardcoded IPs durch generische Placeholder (192.x.x.x, 10.x.x.x) ersetzt
-- 📋 **.env.example**: Verbesserte Struktur mit Kommentaren und Beispiel-Konfiguration
+### Behoben / Fixed
 
-### Technical Details
-- **Minimum Home Assistant Version**: 2026.1.0
-- **Python Version**: 3.9+ (already included in HA)
-- **Required HACS Cards**: apexcharts-card (2.2.3+)
-- **Supported Wallbox**: Mennekes AMTRON 4Business 730 11 C2
+| Deutsch | English |
+|---------|---------|
+| Zählerregister werden als 32-Bit-Werte über beide Register dekodiert, High-Word zuerst. Leistung, Gesamtleistung und Spannung wurden zuvor nur aus dem High-Word gelesen und meldeten konstant `0`. | Meter registers are decoded as 32-bit values across both registers, high word first. Power, total power and voltage were previously read from the high word only and reported a constant `0`. |
+| Energie, Strom und Session-Werte hatten die Wortreihenfolge vertauscht — ein Zählerstand von 990,32 kWh erschien als 477 102,095 kWh. | Energy, current and session values had their word order swapped — a meter reading of 990.32 kWh appeared as 477,102.095 kWh. |
+| Registeradressen für L2 und L3 korrigiert: ein `int32` belegt zwei Register, aufeinanderfolgende Phasen liegen 2 auseinander, nicht 1. | Corrected the L2 and L3 register addresses: an `int32` spans two registers, so consecutive phases are 2 apart, not 1. |
+| Fehlercodes werden als dokumentierte 4 × `uint32` aus den Registern 105–112 gelesen statt als 4 × `uint16`. | Error codes are read as the documented 4 × `uint32` from registers 105–112 instead of 4 × `uint16`. |
+| Weist die Wallbox die Modbus-Sitzung ab, erscheint eine verwertbare Meldung statt eines rohen `pymodbus`-Tracebacks. | If the wallbox refuses the Modbus session, a usable message appears instead of a bare `pymodbus` traceback. |
+| Der Konfigurationsdialog meldet falsche Zugangsdaten korrekt; bei HTTP 401/403 erschien vorher ein unbekannter Fehler. | The configuration dialog reports invalid credentials correctly; HTTP 401/403 previously surfaced as an unknown error. |
+| Der konfigurierte API-Port wird verwendet statt fest Port 80. | The configured API port is used instead of a hardcoded port 80. |
+| Blocklesungen prüfen die Registeranzahl, statt Teilergebnisse still auf `0` zu setzen. | Block reads verify the register count instead of silently zeroing partial results. |
 
----
+### Hinzugefügt / Added
 
-## [1.0.5] – 2026-06-24
+| Deutsch | English |
+|---------|---------|
+| Zwei Dashboards mit je vier Reitern werden mit der Integration ausgeliefert. `wallbox_dashboard_integration.yaml` nutzt ausschließlich Entitäten der Integration, `wallbox_dashboard.yaml` ist die Vollversion für Installationen mit YAML-Teil. | Two dashboards with four tabs each ship with the integration. `wallbox_dashboard_integration.yaml` uses only entities the integration creates; `wallbox_dashboard.yaml` is the full version for installations with the YAML part. |
+| Deutsche Übersetzung des Konfigurationsdialogs samt Feldbeschreibungen. | German translation of the configuration dialog including field descriptions. |
+| Dokumentierte Unterstützung für **AMTRON 4You 400/500** und **4Business 600/700** — alle nutzen denselben Modbus-TCP-Registersatz. | Documented support for **AMTRON 4You 400/500** and **4Business 600/700** — all share the same Modbus TCP register set. |
+| Vollständige Modbus-Registerreferenz nach Protokollversion 1.5, inklusive Hinweis auf die nur lesbaren Register. | Complete Modbus register reference based on protocol version 1.5, including a note on the read-only registers. |
+| Schritt-für-Schritt-Anleitung zum Anlegen des Dashboards in der Seitenleiste. | Step-by-step guide for adding the dashboard to the sidebar. |
 
-### Added
-- Environment variable support for Wallbox API URLs (`WALLBOX_URL`)
-- `.env.example` file with required configuration parameters
-- Documentation for environment variable configuration
+### Geändert / Changed
 
-### Changed
-- Hardcoded Wallbox API URLs replaced with environment variables in Python scripts
-- Improved `.gitignore` with Home Assistant-specific files and temporary scripts
+| Deutsch | English |
+|---------|---------|
+| Dokumentation aufgeteilt in Schnellstart (`README.md`, `README.en.md`) und manuelle Installation (`INSTALLATION_MANUELL.md`, `INSTALLATION_MANUAL.md`), jeweils deutsch und englisch. | Documentation split into quick start (`README.md`, `README.en.md`) and manual installation (`INSTALLATION_MANUELL.md`, `INSTALLATION_MANUAL.md`), each in German and English. |
+| Repository aufgeräumt: Entwicklungshilfen und interne Arbeitsnotizen werden nicht mehr veröffentlicht. | Repository cleaned up: development helpers and internal working notes are no longer published. |
+| Versionierung auf **2.0.0** konsolidiert; der Integrationsname verliert den Zusatz `TEST`. | Versioning consolidated to **2.0.0**; the integration name loses its `TEST` suffix. |
+| Alle Repository-Links zeigen auf `nobelp/mennekes-amtron-ha`. | All repository links point at `nobelp/mennekes-amtron-ha`. |
 
-### Fixed
-- Better security by externalizing IP addresses from source code
+### Hinweis / Note
 
----
-
-## [1.0.0] – 2026-06-24
-
-### Initial Release
-
-Complete Mennekes AMTRON Wallbox integration for Home Assistant:
-- Real-time monitoring via Modbus TCP (Spannung, Strom, Leistung, Ladestatus)
-- Charging sessions via REST API (history, vehicle mapping, costs)
-- Control of HEMS limits, Safe Current, availability, charge interruption
-- Dashboard with ApexCharts bar charts, monthly summary, session list
-- Python automation scripts for data collection and processing
-
----
-
-## Installation & Usage
-
-### Configuration
-
-Copy `.env.example` to `.env` and configure:
-
-```bash
-cp .env.example .env
-# Edit .env with your Wallbox URL and password
-```
-
-### Running Scripts
-
-```bash
-# With environment variables
-export WALLBOX_URL="http://192.x.x.x/api/v1"  # Replace 192.x.x.x with your Wallbox IP
-export WALLBOX_PASS="MUSTER_PASSWORD"          # Replace with your installer password
-
-python3 python_scripts/fetch_charging_sessions.py
-python3 python_scripts/fetch_system_events.py
-python3 python_scripts/fetch_system_logs.py
-```
-
-Or pass password as argument:
-```bash
-python3 python_scripts/fetch_charging_sessions.py your-installer-password
-```
-
----
-
-## Documentation
-
-- `README.md` — Complete setup and architecture documentation
-- `.env.example` — Environment variable reference
-- `python_scripts/` — Individual Python script documentation in headers
+| Deutsch | English |
+|---------|---------|
+| Die Wallbox bedient **nur einen Modbus-TCP-Client gleichzeitig**. Eine zweite Home-Assistant-Instanz, ein paralleler YAML-`modbus:`-Block oder ein externer Energiemanager verhindern die Verbindung. | The wallbox serves **only one Modbus TCP client at a time**. A second Home Assistant instance, a parallel YAML `modbus:` block or an external energy manager will block the connection. |
+| Register 124 (Verfügbarkeit) ist in Protokollversion 1.5 laut Herstellerdokumentation nur lesbar — der zugehörige Schalter kann nicht schreiben. | Register 124 (availability) is read-only in protocol version 1.5 according to the manufacturer documentation — the corresponding switch cannot write to it. |
