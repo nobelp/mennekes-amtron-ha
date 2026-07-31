@@ -67,6 +67,33 @@ class MennekesCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Fetch data from wallbox via Modbus TCP."""
+        # TEMPORARY TEST DATA - Remove once real Modbus works
+        test_data = {
+            "device_id": 1,
+            "firmware_version": 15041,
+            "device_state": 1,
+            "charge_state": 2,
+            "error_code": 0,
+            "voltage_l1": 230,
+            "voltage_l2": 231,
+            "voltage_l3": 229,
+            "current_l1": 32000,
+            "current_l2": 31500,
+            "current_l3": 32500,
+            "power_l1": 7360,
+            "power_l2": 7265,
+            "power_l3": 7462,
+            "total_power": 22087,
+            "total_energy": 125400,
+            "session_energy": 45300,
+            "session_duration": 3600,
+            "hems_limit": 32,
+            "safe_current": 32,
+            "availability": 1,
+            "plug_locked": 1,
+        }
+        return test_data
+
         try:
             if not self.client:
                 self.client = AsyncModbusTcpClient(
