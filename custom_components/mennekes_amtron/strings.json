@@ -1,0 +1,10 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Mennekes AMTRON",
+        "description": "Setup the Mennekes AMTRON Wallbox integration"
+      }
+    }
+  }
+}
