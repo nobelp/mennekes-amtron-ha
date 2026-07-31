@@ -81,7 +81,7 @@ class MennekesCoordinator(DataUpdateCoordinator):
                 try:
                     if "int32" in reg_type or "uint32" in reg_type:
                         result = await self.client.read_holding_registers(
-                            address, 2, slave=1
+                            address, 2, unit=1
                         )
                         if result.isError():
                             data[name] = 0
@@ -92,7 +92,7 @@ class MennekesCoordinator(DataUpdateCoordinator):
                             data[name] = value
                     else:
                         result = await self.client.read_holding_registers(
-                            address, 1, slave=1
+                            address, 1, unit=1
                         )
                         if result.isError():
                             data[name] = 0
@@ -102,7 +102,7 @@ class MennekesCoordinator(DataUpdateCoordinator):
                                 value -= 65536
                             data[name] = value
                 except Exception as err:
-                    _LOGGER.warning("Error reading register %s: %s", name, err)
+                    _LOGGER.debug("Error reading register %s: %s", name, err)
                     data[name] = 0
 
             return data
