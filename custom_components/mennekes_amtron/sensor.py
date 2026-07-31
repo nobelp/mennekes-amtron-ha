@@ -25,10 +25,10 @@ SENSOR_MAP = [
     ("voltage_l2", "Voltage L2", "V", SensorStateClass.MEASUREMENT),
     ("voltage_l3", "Voltage L3", "V", SensorStateClass.MEASUREMENT),
 
-    # Currents (mA)
-    ("current_l1", "Current L1", "mA", SensorStateClass.MEASUREMENT),
-    ("current_l2", "Current L2", "mA", SensorStateClass.MEASUREMENT),
-    ("current_l3", "Current L3", "mA", SensorStateClass.MEASUREMENT),
+    # Currents (A - scaled from mA)
+    ("current_l1", "Current L1", "A", SensorStateClass.MEASUREMENT),
+    ("current_l2", "Current L2", "A", SensorStateClass.MEASUREMENT),
+    ("current_l3", "Current L3", "A", SensorStateClass.MEASUREMENT),
 
     # Power (W)
     ("power_l1", "Power L1", "W", SensorStateClass.MEASUREMENT),
@@ -36,9 +36,9 @@ SENSOR_MAP = [
     ("power_l3", "Power L3", "W", SensorStateClass.MEASUREMENT),
     ("total_power", "Total Power", "W", SensorStateClass.MEASUREMENT),
 
-    # Energy (Wh)
-    ("total_energy", "Total Energy", "Wh", SensorStateClass.TOTAL_INCREASING),
-    ("session_energy", "Session Energy", "Wh", SensorStateClass.TOTAL_INCREASING),
+    # Energy (kWh - scaled from Wh)
+    ("total_energy", "Total Energy", "kWh", SensorStateClass.TOTAL_INCREASING),
+    ("session_energy", "Session Energy", "kWh", SensorStateClass.TOTAL_INCREASING),
 
     # Charging
     ("charge_state", "Charge State", None, None),

@@ -67,28 +67,28 @@ class MennekesCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Fetch data from wallbox via Modbus TCP."""
-        # TEMPORARY TEST DATA - Remove once real Modbus works
+        # TEMPORARY TEST DATA - scaled correctly
         test_data = {
             "device_id": 1,
             "firmware_version": 15041,
             "device_state": 1,
             "charge_state": 2,
             "error_code": 0,
-            "voltage_l1": 230,
-            "voltage_l2": 231,
-            "voltage_l3": 229,
-            "current_l1": 32000,
-            "current_l2": 31500,
-            "current_l3": 32500,
-            "power_l1": 7360,
-            "power_l2": 7265,
-            "power_l3": 7462,
-            "total_power": 22087,
-            "total_energy": 125400,
-            "session_energy": 45300,
-            "session_duration": 3600,
-            "hems_limit": 32,
-            "safe_current": 32,
+            "voltage_l1": 230,  # V
+            "voltage_l2": 231,  # V
+            "voltage_l3": 229,  # V
+            "current_l1": 32.0,  # A (÷ 1000 from mA)
+            "current_l2": 31.5,  # A
+            "current_l3": 32.5,  # A
+            "power_l1": 7360,  # W
+            "power_l2": 7265,  # W
+            "power_l3": 7462,  # W
+            "total_power": 22087,  # W
+            "total_energy": 125.4,  # kWh (÷ 1000 from Wh)
+            "session_energy": 45.3,  # kWh
+            "session_duration": 3600,  # s
+            "hems_limit": 32,  # A
+            "safe_current": 32,  # A
             "availability": 1,
             "plug_locked": 1,
         }
