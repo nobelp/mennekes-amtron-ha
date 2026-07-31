@@ -29,26 +29,25 @@ class MennekesConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: Dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                await self._async_validate_input(user_input)
-                await self.async_set_unique_id(
-                    user_input.get("host", "").lower()
-                )
-                self._abort_if_unique_id_configured()
+            # Basic validation
+            host = user_input.get("host", "").strip()
+            port = user_input.get(CONF_API_PORT, DEFAULT_API_PORT)
 
-                return self.async_create_entry(
-                    title=f"Mennekes AMTRON ({user_input.get('host')})",
-                    data=user_input,
-                )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except asyncio.TimeoutError:
-                errors["base"] = "timeout"
-            except Exception as exc:
-                _LOGGER.exception("Unexpected error during validation: %s", exc)
-                errors["base"] = "unknown"
+            if not host:
+                errors["base"] = "invalid_host"
+            elif not isinstance(port, int) or port < 1 or port > 65535:
+                errors["base"] = "invalid_port"
+            else:
+                try:
+                    await self.async_set_unique_id(host.lower())
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=f"Mennekes AMTRON ({host})",
+                        data=user_input,
+                    )
+                except Exception as exc:
+                    _LOGGER.exception("Unexpected error: %s", exc)
+                    errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user",
