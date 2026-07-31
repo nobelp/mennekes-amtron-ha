@@ -317,15 +317,27 @@ The dashboard requires **apexcharts-card** (HACS → Frontend):
 - HACS → Frontend → install `apexcharts-card` by RomRider
 - Tested with version **2.2.3**
 
-### 6. Generate Dashboard and Restart HA
+### 6. Add the dashboard to the sidebar
 
-```bash
-# Generate dashboard JSON from Python script
-cd /workspace/HA_Menneckes
-python3 generate_dashboard.py > /config/.storage/lovelace.dashboard_wallbox
+The dashboard ships with the integration. After the HACS install both variants are located at
+`/config/custom_components/mennekes_amtron/dashboards/`:
 
-# Restart HA: Settings → System → Restart
-```
+| File | Use | Requires |
+|---|---|---|
+| `wallbox_dashboard_integration.yaml` | **Recommended for a fresh install.** Mapped exclusively to the entities the integration creates, so no card shows "entity not found". | only the integration |
+| `wallbox_dashboard.yaml` | Full version with system-event filters, DLM cards and vehicle mapping | integration **plus** the template sensors, helpers and scripts of the YAML part |
+
+1. **Settings → Dashboards → "+ Add dashboard" → "New dashboard from scratch"**
+2. Title `Wallbox`, icon `mdi:ev-station`, URL **`dashboard-wallbox`**, show in sidebar enabled.
+   The URL must contain a hyphen — Home Assistant rejects `wallbox` and `dashboard_wallbox`.
+3. Open the new dashboard → pencil → ⋮ → **Raw configuration editor**
+4. Paste the entire contents of the chosen file, replacing the existing text, and save
+
+This creates the four tabs `/dashboard-wallbox/wallbox-main`, `…/wallbox-history`,
+`…/wallbox-systemlogs` and `…/wallbox-config`.
+
+The full German documentation, including the prerequisites per tab and the system-event filter
+helpers, is in [README.de.md](README.de.md).
 
 After restart, the startup automation runs automatically:
 - Charging sessions are fetched from the API (~20s)

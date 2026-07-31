@@ -10,29 +10,30 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     DOMAIN,
-    MODBUS_SLAVE_ID,
+    METER_BLOCK_COUNT,
+    MODBUS_CONNECT_TIMEOUT,
     REG_CP_STATUS,
-    REG_ERROR_CODE_1,
-    REG_VEHICLE_STATE,
-    REG_CP_AVAILABILITY,
-    REG_SAFE_CURRENT,
-    REG_COMM_TIMEOUT,
     REG_ENERGY_L1,
-    REG_POWER_L1,
-    REG_CURRENT_L1,
-    REG_VOLTAGE_L1,
-    REG_SIGNALED_CURRENT,
-    REG_SESSION_ENERGY,
-    REG_SESSION_DURATION,
     REG_HEMS_CURRENT_LIMIT,
     REG_PHASE_SWITCH_MODE,
+    REG_SAFE_CURRENT,
+    REG_SESSION_ENERGY,
+    REG_SIGNALED_CURRENT,
+    REG_VEHICLE_STATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _to_int16(val: int) -> int:
-    return val - 65536 if val > 32767 else val
+def _to_uint32(high: int, low: int) -> int:
+    """Combine two registers into an unsigned 32-bit value, high word first."""
+    return (high << 16) | low
+
+
+def _to_int32(high: int, low: int) -> int:
+    """Combine two registers into a signed 32-bit value, high word first."""
+    val = (high << 16) | low
+    return val - 4294967296 if val > 2147483647 else val
 
 
 class ModbusDataCoordinator(DataUpdateCoordinator):
@@ -49,13 +50,29 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
 
     async def _get_client(self):
         from pymodbus.client import AsyncModbusTcpClient
-        if self._client is None or not self._client.connected:
-            self._client = AsyncModbusTcpClient(
-                host=self._host,
-                port=self._port,
-                timeout=5
+
+        if self._client is not None and self._client.connected:
+            return self._client
+
+        self._client = AsyncModbusTcpClient(
+            host=self._host,
+            port=self._port,
+            timeout=MODBUS_CONNECT_TIMEOUT,
+        )
+        await self._client.connect()
+
+        # connect() can report success while the wallbox drops the session again
+        # right after the TCP handshake, so the transport state is the only
+        # reliable signal. Without this check the first read would fail with a
+        # bare pymodbus ConnectionException traceback instead of a usable hint.
+        if not self._client.connected:
+            self._client = None
+            raise UpdateFailed(
+                f"No Modbus TCP connection to {self._host}:{self._port} — the wallbox "
+                "refused or immediately closed the session. Check that Modbus TCP is "
+                "enabled and that no other client holds the single allowed connection."
             )
-            await self._client.connect()
+
         return self._client
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -65,11 +82,14 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
 
             _LOGGER.debug("Reading Modbus registers from %s:%d", self._host, self._port)
 
-            # CP status + error codes: 104–108 (5 registers)
-            r = await client.read_holding_registers(REG_CP_STATUS, count=5)
-            if not r.isError():
-                data["cp_status"] = r.registers[0]
-                data["error_codes"] = r.registers[1:5]
+            # OCPP status (104) + error codes (105–112, 4 * uint32)
+            r = await client.read_holding_registers(REG_CP_STATUS, count=9)
+            if not r.isError() and len(r.registers) >= 9:
+                regs = r.registers
+                data["cp_status"] = regs[0]
+                data["error_codes"] = [
+                    _to_uint32(regs[i], regs[i + 1]) for i in range(1, 9, 2)
+                ]
 
             # Vehicle state + CP availability: 122–124 (3 registers)
             r = await client.read_holding_registers(REG_VEHICLE_STATE, count=3)
@@ -83,45 +103,48 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
                 data["safe_current"] = r.registers[0]
                 data["comm_timeout"] = r.registers[1]
 
-            # Meter Energy/Power/Current/Voltage: 200–227 (28 registers)
-            # Each value is int32 (2 registers): L1, L2, L3 for each measurement
-            r = await client.read_holding_registers(REG_ENERGY_L1, count=28)
-            if not r.isError():
+            # Meter block 200–227. Every value is an int32 spread over two
+            # registers, high word first. Reading only the high word (as an
+            # earlier revision did) yields 0 for realistic power and voltage
+            # readings, because those fit entirely into the low word.
+            r = await client.read_holding_registers(REG_ENERGY_L1, count=METER_BLOCK_COUNT)
+            if not r.isError() and len(r.registers) >= METER_BLOCK_COUNT:
                 regs = r.registers
-                # Energy: 200-205 (3 x int32)
-                data["energy_l1"] = round((regs[1] << 16 | regs[0]) / 1000.0, 3) if len(regs) > 1 else 0
-                data["energy_l2"] = round((regs[3] << 16 | regs[2]) / 1000.0, 3) if len(regs) > 3 else 0
-                data["energy_l3"] = round((regs[5] << 16 | regs[4]) / 1000.0, 3) if len(regs) > 5 else 0
-                # Power: 206-211 (3 x int32)
-                data["power_l1"] = _to_int16(regs[6]) if len(regs) > 6 else 0
-                data["power_l2"] = _to_int16(regs[8]) if len(regs) > 8 else 0
-                data["power_l3"] = _to_int16(regs[10]) if len(regs) > 10 else 0
-                # Current: 212-217 (3 x int32, in mA)
-                data["current_l1"] = round((regs[13] << 16 | regs[12]) / 1000.0, 3) if len(regs) > 13 else 0
-                data["current_l2"] = round((regs[15] << 16 | regs[14]) / 1000.0, 3) if len(regs) > 15 else 0
-                data["current_l3"] = round((regs[17] << 16 | regs[16]) / 1000.0, 3) if len(regs) > 17 else 0
-                # Total Energy: 218-219 (1 x int32)
-                data["total_energy"] = round((regs[19] << 16 | regs[18]) / 1000.0, 3) if len(regs) > 19 else 0
-                # Total Power: 220-221 (1 x int32)
-                data["total_power"] = _to_int16(regs[20]) if len(regs) > 20 else 0
-                # Voltage: 222-227 (3 x int32)
-                data["voltage_l1"] = regs[22] if len(regs) > 22 else 0
-                data["voltage_l2"] = regs[24] if len(regs) > 24 else 0
-                data["voltage_l3"] = regs[26] if len(regs) > 26 else 0
+                # Energy 200–205 [Wh] → kWh. L1 carries the meter total,
+                # L2/L3 report 0 on this device family.
+                data["energy_l1"] = round(_to_int32(regs[0], regs[1]) / 1000.0, 3)
+                data["energy_l2"] = round(_to_int32(regs[2], regs[3]) / 1000.0, 3)
+                data["energy_l3"] = round(_to_int32(regs[4], regs[5]) / 1000.0, 3)
+                # Power 206–211 [W]
+                data["power_l1"] = _to_int32(regs[6], regs[7])
+                data["power_l2"] = _to_int32(regs[8], regs[9])
+                data["power_l3"] = _to_int32(regs[10], regs[11])
+                # Current 212–217 [mA] → A
+                data["current_l1"] = round(_to_int32(regs[12], regs[13]) / 1000.0, 3)
+                data["current_l2"] = round(_to_int32(regs[14], regs[15]) / 1000.0, 3)
+                data["current_l3"] = round(_to_int32(regs[16], regs[17]) / 1000.0, 3)
+                # Total energy 218–219 [Wh] → kWh
+                data["total_energy"] = round(_to_int32(regs[18], regs[19]) / 1000.0, 3)
+                # Total power 220–221 [W]
+                data["total_power"] = _to_int32(regs[20], regs[21])
+                # Voltage 222–227 [V]
+                data["voltage_l1"] = _to_int32(regs[22], regs[23])
+                data["voltage_l2"] = _to_int32(regs[24], regs[25])
+                data["voltage_l3"] = _to_int32(regs[26], regs[27])
 
             # Signaled current: 706 (1 register)
             r = await client.read_holding_registers(REG_SIGNALED_CURRENT, count=1)
             if not r.isError():
                 data["signaled_current"] = r.registers[0]
 
-            # Session data: 716-719 (4 registers)
+            # Session data: 716-719 (2 x uint32)
             r = await client.read_holding_registers(REG_SESSION_ENERGY, count=4)
-            if not r.isError():
+            if not r.isError() and len(r.registers) >= 4:
                 regs = r.registers
-                # Charged Energy: 716-717 (1 x uint32)
-                data["session_energy"] = round((regs[1] << 16 | regs[0]) / 1000.0, 3)
-                # Charging Duration: 718-719 (1 x uint32, in seconds)
-                data["session_duration"] = (regs[3] << 16) | regs[2]
+                # Charged Energy: 716-717 [Wh] → kWh
+                data["session_energy"] = round(_to_uint32(regs[0], regs[1]) / 1000.0, 3)
+                # Charging Duration: 718-719 [s]
+                data["session_duration"] = _to_uint32(regs[2], regs[3])
 
             # HEMS limit (v1.5): 2000 (1 register)
             r = await client.read_holding_registers(REG_HEMS_CURRENT_LIMIT, count=1)
@@ -136,6 +159,8 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Successfully read %d registers", len(data))
             return data
 
+        except UpdateFailed:
+            raise
         except Exception as err:
             _LOGGER.error("Modbus communication error: %s", err, exc_info=True)
             if self._client:

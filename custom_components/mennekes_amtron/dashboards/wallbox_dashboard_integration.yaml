@@ -1,0 +1,250 @@
+# Wallbox-Dashboard, Variante 2 — ausschliesslich auf die Entitaeten der Integration gemappt.
+# Benoetigt keine Template-Sensoren, Helfer oder Python-Scripts des YAML-Teils und zeigt
+# deshalb keine "Entitaet nicht gefunden"-Karten.
+#
+# Einrichtung: Dashboard mit der URL dashboard-wallbox anlegen, dann diesen Inhalt im
+# Rohkonfigurationseditor einfuegen. Anleitung: siehe README.md.
+#
+# Vollversion mit Systemereignis-Filter und Fahrzeugzuordnung: wallbox_dashboard.yaml
+title: Mennekes AMTRON Wallbox (Integration)
+icon: mdi:ev-station
+views:
+- title: Übersicht
+  path: wallbox-main
+  icon: mdi:lightning-bolt
+  cards:
+  - type: entities
+    title: Status
+    icon: mdi:ev-station
+    entities:
+    - entity: sensor.mennekes_amtron_charging_status
+      name: Ladestatus
+    - entity: sensor.mennekes_amtron_vehicle_state
+      name: Fahrzeugzustand
+    - entity: sensor.mennekes_amtron_phase_switch_mode
+      name: Phasenumschaltung
+    - entity: switch.mennekes_amtron_cp_availability
+      name: Verfügbarkeit
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: sensor.mennekes_amtron_charging_status
+      state: Charging
+    card:
+      type: entities
+      title: Aktuelle Ladesession
+      icon: mdi:battery-charging
+      entities:
+      - entity: sensor.mennekes_amtron_session_energy
+        name: Geladene Energie
+      - entity: sensor.mennekes_amtron_session_duration
+        name: Ladedauer
+      - entity: sensor.mennekes_amtron_total_power
+        name: Ladeleistung
+      - entity: sensor.mennekes_amtron_signaled_current
+        name: Signalisierter Strom
+      - entity: sensor.mennekes_amtron_max_current_ev
+        name: Max. Strom Fahrzeug
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: sensor.mennekes_amtron_charging_status
+      state_not: Charging
+    card:
+      type: entities
+      title: Letzte Ladesession
+      icon: mdi:battery-outline
+      entities:
+      - entity: sensor.mennekes_amtron_last_session_energy
+        name: Geladene Energie
+      - entity: sensor.mennekes_amtron_last_vehicle
+        name: Fahrzeug
+      - entity: sensor.mennekes_amtron_session_duration
+        name: Ladedauer
+  - type: entities
+    title: Energie (kWh)
+    icon: mdi:counter
+    entities:
+    - entity: sensor.mennekes_amtron_total_energy
+      name: Zählerstand gesamt
+    - entity: sensor.mennekes_amtron_energy_l1
+      name: Energie L1
+    - entity: sensor.mennekes_amtron_energy_l2
+      name: Energie L2
+    - entity: sensor.mennekes_amtron_energy_l3
+      name: Energie L3
+  - type: entities
+    title: Leistung (W)
+    icon: mdi:flash
+    entities:
+    - entity: sensor.mennekes_amtron_total_power
+      name: Gesamtleistung
+    - entity: sensor.mennekes_amtron_power_l1
+      name: Leistung L1
+    - entity: sensor.mennekes_amtron_power_l2
+      name: Leistung L2
+    - entity: sensor.mennekes_amtron_power_l3
+      name: Leistung L3
+  - type: entities
+    title: Spannung & Strom
+    icon: mdi:sine-wave
+    entities:
+    - entity: sensor.mennekes_amtron_voltage_l1
+      name: Spannung L1
+    - entity: sensor.mennekes_amtron_voltage_l2
+      name: Spannung L2
+    - entity: sensor.mennekes_amtron_voltage_l3
+      name: Spannung L3
+    - entity: sensor.mennekes_amtron_current_l1
+      name: Strom L1
+    - entity: sensor.mennekes_amtron_current_l2
+      name: Strom L2
+    - entity: sensor.mennekes_amtron_current_l3
+      name: Strom L3
+  - type: entities
+    title: Limits (gelesen)
+    icon: mdi:speedometer
+    entities:
+    - entity: sensor.mennekes_amtron_hems_current_limit
+      name: HEMS-Limit
+    - entity: sensor.mennekes_amtron_safe_current
+      name: Safe Current
+    - entity: sensor.mennekes_amtron_signaled_current
+      name: Signalisierter Strom
+- title: History
+  path: wallbox-history
+  icon: mdi:history
+  cards:
+  - type: entities
+    title: Summen
+    icon: mdi:sigma
+    entities:
+    - entity: sensor.mennekes_amtron_total_sessions
+      name: Ladevorgänge
+    - entity: sensor.mennekes_amtron_total_charged_energy
+      name: Geladene Energie gesamt
+    - entity: sensor.mennekes_amtron_total_cost
+      name: Kosten gesamt
+    - entity: sensor.mennekes_amtron_last_session_energy
+      name: Letzte Session
+    - entity: sensor.mennekes_amtron_last_vehicle
+      name: Letztes Fahrzeug
+  - type: markdown
+    title: Monatsübersicht
+    content: '{% set months = state_attr(''sensor.mennekes_amtron_sessions_summary'',''monthly_summary'')
+      %}
+
+      {% if months %}
+
+      | Monat | kWh | Kosten |
+
+      |---|---:|---:|
+
+      {% for m in months %}| {{ m.month }} | {{ ''%.1f'' | format(m.kwh) }} | {{ ''%.2f'' | format(m.cost)
+      }} |
+
+      {% endfor %}
+
+      {% else %}
+
+      *Noch keine Daten — die Ladehistorie wird stündlich über die REST-API der Wallbox geholt.*
+
+      {% endif %}'
+  - type: markdown
+    title: Nach Fahrzeug
+    content: '{% set totals = state_attr(''sensor.mennekes_amtron_sessions_summary'',''vehicle_totals'')
+      %}
+
+      {% if totals %}
+
+      | Fahrzeug | kWh | Kosten |
+
+      |---|---:|---:|
+
+      {% for name, v in totals.items() %}| {{ name }} | {{ ''%.1f'' | format(v.kwh) }} | {{ ''%.2f'' |
+      format(v.cost) }} |
+
+      {% endfor %}
+
+      {% else %}
+
+      *Noch keine Daten.*
+
+      {% endif %}'
+  - type: markdown
+    title: Letzte Ladevorgänge
+    content: '{% set sessions = state_attr(''sensor.mennekes_amtron_sessions_summary'',''sessions'') %}
+
+      {% if sessions %}
+
+      | Start | Fahrzeug | kWh | Kosten |
+
+      |---|---|---:|---:|
+
+      {% for s in sessions[:20] %}| {{ s.start[:16] | replace(''T'','' '') }} | {{ s.vehicle }} | {{ ''%.2f''
+      | format(s.energy_kwh) }} | {{ ''%.2f'' | format(s.cost_chf) }} |
+
+      {% endfor %}
+
+      {% else %}
+
+      *Noch keine Daten.*
+
+      {% endif %}'
+- title: Systemereignisse
+  path: wallbox-systemlogs
+  icon: mdi:text-box-search-outline
+  cards:
+  - type: markdown
+    title: Systemereignisse
+    content: 'Dieser Reiter benötigt die optionalen Command-Line-Sensoren aus **SYSTEMLOGS_SETUP.md**.
+
+      Sie holen das Ereignisprotokoll über die REST-API der Wallbox ab — die Integration selbst
+
+      liest ausschließlich Modbus-Register und die Ladehistorie.
+
+
+      Nach der Einrichtung stehen `sensor.wallbox_system_events` und
+
+      `sensor.wallbox_system_logs` zur Verfügung; die Vollversion des Dashboards
+
+      (`wallbox_dashboard.yaml`) enthält den fertigen Reiter mit Filterleiste.'
+- title: Konfiguration
+  path: wallbox-config
+  icon: mdi:cog
+  cards:
+  - type: entities
+    title: Steuerung
+    icon: mdi:tune
+    entities:
+    - entity: number.mennekes_amtron_hems_current_limit
+      name: HEMS-Limit
+    - entity: number.mennekes_amtron_safe_current
+      name: Safe Current
+    - entity: number.mennekes_amtron_communication_timeout
+      name: Kommunikations-Timeout
+    - entity: switch.mennekes_amtron_pause_charging
+      name: Ladevorgang pausieren
+    - entity: switch.mennekes_amtron_cp_availability
+      name: Verfügbarkeit
+  - type: entities
+    title: Integration
+    icon: mdi:information-outline
+    entities:
+    - entity: update.mennekes_amtron_wallbox_update
+      name: Update
+    - entity: sensor.mennekes_amtron_sessions_summary
+      name: Ladehistorie
+  - type: markdown
+    title: Einstellungen ändern
+    content: 'Strompreis und Aktualisierungsintervall werden nicht über Helfer gepflegt, sondern über
+
+      die Integration selbst:
+
+
+      **Einstellungen → Geräte & Dienste → Mennekes AMTRON → Konfigurieren**
+
+
+      Die Fahrzeugzuordnung (RFID → Name) benötigt die optionalen Python-Scripts und Helfer
+
+      des YAML-Teils — siehe README.md.'
