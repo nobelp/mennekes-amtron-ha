@@ -1,292 +1,254 @@
-# Mennekes AMTRON 4Business 730 11 C2 - Home Assistant Integration
+# Mennekes AMTRON Wallbox Integration for Home Assistant
 
-Vollständige Integration einer Mennekes Wallbox (Firmware 1.5.41) in Home Assistant über Modbus TCP mit Fallback-Netzwerk.
+Complete Home Assistant integration for Mennekes AMTRON 4Business 730 Charging Wallbox with real-time monitoring, charging history, and full control.
 
-## Hardware-Konfiguration
+## 🚀 Features
 
-- **Wallbox Model**: Mennekes AMTRON 4Business 730 11 C2
-- **Firmware**: 1.5.41
-- **Primäre Verbindung**: 192.168.2.179:502 (Slave ID 1) ✓ getestet
-- **Fallback-Verbindung**: 10.84.19.55:502 (Slave ID 1) - Mobilfunk-Backup
+### Sensors (34+)
+- **Voltages**: L1, L2, L3 (V)
+- **Currents**: L1, L2, L3 (A)
+- **Power**: L1, L2, L3, Total (W)
+- **Energy**: Per phase, total, session (kWh)
+- **Status**: Charging state, vehicle state, CP status
+- **Control**: HEMS limit, safe current, phase mode
+- **History**: Total sessions, total cost, last vehicle
 
-## Installation & Konfiguration
+### Entities
+- **Sensors**: Real-time meter data via Modbus TCP
+- **Numbers**: HEMS Current Limit, Safe Current (adjustable)
+- **Switches**: Charging control, phase switching
+- **Templates**: Energy cost, session tracking
 
-### 1. Configuration.yaml vorbereiten
+### Dashboards
+- **wallbox-main**: Real-time monitoring (voltage, current, power, energy)
+- **wallbox-history**: Charging history (sessions, vehicles, costs)
+- **wallbox-systemlogs**: System events and logs
+- **wallbox-config**: Configuration and settings
 
-Füge folgende !include Statements in deine `configuration.yaml` ein:
+## 📦 Installation
+
+### Option 1: HACS (Recommended) ⭐
+
+1. **Open HACS** in Home Assistant
+2. **Repositories** → **Custom repositories**
+3. Add: `https://github.com/nobelp/mennekes-amtron-ha`
+4. Search **"Mennekes AMTRON"**
+5. Click **Install**
+6. **Restart Home Assistant**
+7. Settings → Devices & Services → **[CREATE INTEGRATION](#configuration)**
+
+### Option 2: Manual
+
+```bash
+cd /config/custom_components
+git clone https://github.com/nobelp/mennekes-amtron-ha mennekes_amtron
+# Restart Home Assistant
+```
+
+## ⚙️ Configuration
+
+### Via UI (Recommended)
+
+1. Settings → Devices & Services
+2. **Create Integration** → Search "Mennekes AMTRON"
+3. Enter configuration:
+   - **Host**: `192.168.2.179` (wallbox IP)
+   - **Modbus Port**: `502` (default)
+   - **API Password**: Wallbox installer password
+   - **Scan Interval**: `30` seconds
+   - **Electricity Price**: `0.29` CHF/kWh
+
+### Additional YAML Configuration (Optional)
+
+Add to your `configuration.yaml`:
 
 ```yaml
-# Wallbox Modbus Integration
-modbus: !include modbus_wallbox.yaml
+# Automations (session tracking, notifications)
+automation: !include custom_components/mennekes_amtron/automations_wallbox.yaml
 
-# Wallbox Helper Entities
-input_number: !include input_wallbox.yaml
-input_boolean: !include input_wallbox.yaml
+# Template sensors (cost calculation, derived values)
+template: !include custom_components/mennekes_amtron/template_sensors_wallbox.yaml
 
-# Wallbox Template Sensoren
-template: !include template_sensors_wallbox.yaml
+# Input helpers (vehicle names, RFID tags)
+input_text: !include_dir_merge_named custom_components/mennekes_amtron/input_wallbox.yaml
 
-# Wallbox Automationen
-automation: !include automations_wallbox.yaml
+# Alternative: Native Modbus (if issues with coordinator)
+modbus: !include custom_components/mennekes_amtron/modbus_wallbox.yaml
 ```
 
-### 2. Dateistruktur
+### Alternative: Native Modbus Integration
 
-```
-config/
-├── configuration.yaml
-├── modbus_wallbox.yaml                 # Modbus Konfiguration (alle Register)
-├── input_wallbox.yaml                  # Helper Entities (Slider, Schalter)
-├── template_sensors_wallbox.yaml       # Template Sensoren (Umrechnung, Dekodierung)
-├── automations_wallbox.yaml            # Automationen (Schreiben, Benachrichtigungen)
-└── README_wallbox.md                   # Diese Datei
-```
-
-### 3. Home Assistant neustarten
-
-Nach dem Hinzufügen der Include-Statements Home Assistant neu starten, damit die neue Modbus-Integration geladen wird.
-
-## Funktionalität
-
-### Verfügbare Sensoren
-
-#### System-Information
-- **Firmware Version**: v1.5.41 (ASCII)
-- **Protokoll Version**: Modbus TCP Spezifikation v1.07
-- **Chargepoint Model**: Zusammengesetzter Model-String aus 5x 32-bit Register
-- **Modbus Address Offset**: Konfigurierbar
-
-#### Ladestatus
-- **CP Status**: Verfügbar, Besetzt, Reserviert, Nicht verfügbar, Fehler, Vorbereitung, **Lädt**, Pause, Abgeschlossen
-- **Vehicle State**: Zustand A-E (Kein Fahrzeug, Angesteckt, Laden, Mit Lüftung, Fehler)
-- **Charging Status**: Automatische deutsche Statusbeschreibung
-- **Plug Lock Status**: Gesperrt/Entsperrt
-
-#### Energiemesswerte
-- **Spannung**: L1, L2, L3 (V) - **getestet: 230V, 232V, 233V ✓**
-- **Strom**: L1, L2, L3 (mA → A konvertiert)
-- **Leistung**: L1, L2, L3, Gesamt (W)
-- **Energie**: L1, L2, L3, Gesamt (Wh → kWh konvertiert) - **getestet: 342.972 Wh ✓**
-
-#### Ladesession
-- **Geladene Energie**: Session (Wh → kWh)
-- **Ladedauer**: formatiert als hh:mm:ss
-- **Ladestrom**: aktueller Strom (A)
-- **Max Strom EV**: Maximaler Fahrzeugstrom (A)
-- **Start/End Time**: BCD-formatierte Zeit
-
-#### Fehlerbehandlung
-- **Error Codes**: Dekodiert als lesbare Textliste:
-  - RCM ausgelöst
-  - Fahrzeugzustand E
-  - Mode3 Dioden-Check
-  - MCB Type2/Schuko ausgelöst
-  - RCD ausgelöst
-  - Kontakt verschweißt
-  - Backend getrennt
-  - Aktuator-Fehler
-  - Firmware-Update läuft
-  - Tilt-Fehler
-  - Falsches CP/PR-Kabel
-  - Type2 Überlast
-  - Keine Stromversorgung
-
-#### Dynamic Load Management (DLM)
-- **DLM Mode**: Disabled, Master+Slave, Master, Slave AutoDiscovery, Slave Fixed-IP
-- **DLM Limits**: Sub-Distribution Limits pro Phase (L1-L3)
-- **DLM Status**: Anzahl verbundener Slaves, verfügbare Ströme
-
-### Steuerung (Schreib-Register)
-
-#### HEMS Stromlimit (Register 1000)
-- **Bereich**: 0-16 A
-- **0**: Laden pausiert
-- **6-16**: Aktiver Ladestrom
-- **Steuerung**: `input_number.wallbox_hems_current_limit` Slider
-- **Automation**: Änderungen werden automatisch auf die Wallbox geschrieben
-
-#### CP Availability (Register 124)
-- **Werte**: 0 = unavailable, 1 = available
-- **Steuerung**: `input_boolean.wallbox_cp_availability` Toggle
-- **Automation**: Änderungen werden automatisch geschrieben
-
-#### Safe Current (Register 131)
-- **Bereich**: 0-32 A
-- **Steuerung**: `input_number.wallbox_safe_current` Slider
-- **Automation**: Wird beim Ändern geschrieben
-
-#### Comm Timeout (Register 132)
-- **Bereich**: 1-300 s
-- **Steuerung**: `input_number.wallbox_comm_timeout` Slider
-- **Automation**: Wird beim Ändern geschrieben
-
-## Fallback-Logik
-
-Die Wallbox ist über zwei Netzwerkpfade erreichbar:
-
-1. **Primär**: 192.168.2.179:502 (Standard-Ethernet)
-2. **Fallback**: 10.84.19.55:502 (Mobilfunk-Backup)
-
-Die Modbus TCP Konfiguration nutzt einen einzigen Host mit der primären IP. Falls diese nicht erreichbar ist:
-
-**Manueller Fallback**: Bearbeite `modbus_wallbox.yaml` und ändere die `host` von `192.168.2.179` zu `10.84.19.55`.
-
-**Automatischer Fallback (Optional)**: Implementierbar durch:
-- HA-native Fallover-Mechanismen (erfordert zusätzliche Automation)
-- oder separaten Modbus-Hub mit automatischer IP-Auswahl
-
-Für stabilen Produktionseinsatz wird empfohlen, die primäre Ethernet-Verbindung zu nutzen.
-
-## Automationen & Benachrichtigungen
-
-### Automat. Stromlimit-Steuerung
-- Änderungen am HEMS-Slider (`input_number.wallbox_hems_current_limit`) werden sofort auf Register 1000 geschrieben
-- Ermöglicht dynamische Lastverteilung und Energiemanagement
-
-### Fehlerbenachrichtigungen
-- Alert bei Fehler-Erkennungen (RCM, RCD, Backend, etc.)
-- Titel: "🚨 Wallbox Fehler"
-- Nachricht mit konkreter Fehlerliste
-
-### Ladevorgänge
-- **Ladestart**: Benachrichtigung mit aktuellem Strom und Spannung
-- **Ladeende**: Benachrichtigung mit geladener Energie und Ladedauer
-- **Fahrzeug angesteckt**: Warnung beim Anstecken
-
-### Status-Überwachung
-- **Nicht erreichbar**: Warnung nach 30 Sekunden Ausfall
-- **Hohe Strombelastung**: Alert bei > 10kW über 5 Minuten
-- **CP Status Änderung**: Logging von wichtigen Zustandsübergängen
-
-## Dashboard-Integration
-
-### Energie-Dashboard
-Die folgenden Sensoren sind für das Home Assistant Energie-Dashboard optimiert:
-
-- `sensor.wallbox_total_energy_kwh` (device_class: energy, state_class: total_increasing)
-- `sensor.wallbox_energy_l1_kwh` (per Phase)
-- `sensor.wallbox_energy_l2_kwh`
-- `sensor.wallbox_energy_l3_kwh`
-
-### Custom Card Beispiel (für Lovelace)
+If you prefer Home Assistant's built-in Modbus support:
 
 ```yaml
-type: custom:mushroom-template-card
-primary: "{{ states('sensor.wallbox_charging_status') }}"
-secondary: "{{ states('sensor.wallbox_session_energy_kwh') }} kWh"
-icon: mdi:ev-station
-icon_color: |
-  {% if states('sensor.wallbox_charging_status') == 'Lädt' %}
-    amber
-  {% elif states('sensor.wallbox_charging_status') == 'Fehler' %}
-    red
-  {% else %}
-    green
-  {% endif %}
+# configuration.yaml
+modbus: !include custom_components/mennekes_amtron/modbus_wallbox.yaml
 ```
 
-## Modbus Register Referenz
+This provides 60+ meter registers directly via Modbus (no custom component needed).
 
-### Lesende Register (Read-Only)
+## 📊 Dashboards
 
-| Register | Größe | Typ | Einheit | Beschreibung |
-|----------|-------|-----|--------|--------------|
-| 100-101 | uint32 | ASCII | - | Firmware Version |
-| 104 | uint16 | enum | - | OCPP CP Status |
-| 105-112 | 4x uint32 | Bitmask | - | Error Codes 1-4 |
-| 120-121 | uint32 | ASCII | - | Protocol Version |
-| 122 | uint16 | enum | - | Vehicle State |
-| 142-151 | 5x uint32 | ASCII | - | Chargepoint Model |
-| 200-227 | uint32 | - | V, A, W, Wh | Meter Values (Spannung, Strom, Leistung, Energie) |
-| 600-635 | uint16 | - | A | DLM Configuration & Status |
-| 705-730 | - | - | Wh, A, s | Charge Process Data |
+Beautiful pre-built dashboards for wallbox monitoring and control!
 
-### Schreib-Register (Read/Write)
+### Available Dashboards
 
-| Register | Größe | Typ | Bereich | Beschreibung |
-|----------|-------|-----|---------|--------------|
-| 124 | uint16 | enum | 0-1 | CP Availability |
-| 131 | uint16 | uint | A | Safe Current |
-| 132 | uint16 | uint | s | Comm Timeout |
-| 613-615 | uint16 | uint | A | DLM Operator Limits |
-| 1000 | uint16 | uint | 0-16 | HEMS Current Limit |
+- **wallbox_dashboard.yaml** - Main realtime monitoring (voltage, current, power, energy)
+- **wallbox_dashboard.json** - Alternative JSON format
 
-## Troubleshooting
+### Import Dashboards to Home Assistant
 
-### Wallbox nicht erreichbar
+#### Method 1: Automatic via YAML (Recommended)
 
-1. **Primäre IP prüfen**:
+Add to your `configuration.yaml`:
+
+```yaml
+# Dashboards
+homeassistant:
+  packages:
+    mennekes_wallbox_dashboards: !include custom_components/mennekes_amtron/wallbox_dashboard.yaml
+```
+
+Then restart Home Assistant. Dashboards appear automatically in UI.
+
+#### Method 2: Manual Import via UI
+
+1. Open Home Assistant
+2. Settings → Dashboards (left sidebar)
+3. **Create Dashboard** → Give it a name (e.g., "Wallbox")
+4. Click **Edit Dashboard** (pencil icon)
+5. Click **⋮** (three dots) → **Edit dashboard details** → **Raw configuration editor**
+6. Delete the default content
+7. Copy-paste content from `custom_components/mennekes_amtron/wallbox_dashboard.yaml`
+8. Click **Save**
+
+#### Method 3: File-based Setup
+
+1. Create `/config/dashboards/` directory (if not exists)
+2. Copy `wallbox_dashboard.yaml` to `/config/dashboards/wallbox.yaml`
+3. In Home Assistant:
+   - Settings → Dashboards
+   - New dashboard appears automatically
+   - Customize as needed
+
+#### Method 4: Using setup.sh Script (Automatic)
+
+```bash
+cd /config/custom_components/mennekes_amtron
+chmod +x setup.sh
+./setup.sh
+```
+
+This automatically:
+- Creates dashboard directory
+- Imports dashboard files
+- Configures automations
+- Adds input helpers
+- Restarts Home Assistant
+
+## 🛠️ Troubleshooting
+
+### "Modbus communication error: Not connected"
+
+1. **Verify wallbox is reachable**:
    ```bash
    ping 192.168.2.179
-   ```
-
-2. **Fallback IP prüfen**:
-   ```bash
-   ping 10.84.19.55
-   ```
-
-3. **Modbus Port prüfen**:
-   ```bash
    nc -zv 192.168.2.179 502
    ```
 
-4. **Home Assistant Logs prüfen**:
-   - Developer Tools → Logs
-   - Filtern nach "modbus"
+2. **Check wallbox settings**:
+   - Modbus TCP enabled? (Wallbox Settings → Modbus)
+   - Correct IP & port? (192.168.2.179:502)
+   - Wallbox powered on?
 
-### Sensoren zeigen "unavailable"
+3. **Check HA logs**:
+   - Settings → System → Logs
+   - Filter: `mennekes`
+   - Look for connection errors
 
-- Wallbox ist nicht erreichbar (siehe oben)
-- Falsche Slave ID (aktuell: 1)
-- Kommunikations-Timeout zu kurz eingestellt
+4. **Try native Modbus** (alternative):
+   - Use `modbus_wallbox.yaml` instead of custom component
+   - Built-in Modbus is sometimes more stable
 
-### Register-Schreiben funktioniert nicht
+### Sensors are empty
 
-1. **Automatische Modbus-Automation deaktivieren** (während Debugging)
-2. **Manual Write in Developer Tools testen**:
-   ```yaml
-   service: modbus.write_register
-   data:
-     hub: "Mennekes AMTRON Wallbox"
-     slave: 1
-     address: 1000
-     value: 10
-   ```
+- Check Modbus connection (see above)
+- Verify wallbox responds to Modbus requests
+- Check configuration: host, port, password correct?
 
-## Performance-Tipps
+### High power values
 
-- **Modbus Scan Interval**: Standardmäßig 30 Sekunden (in modbus_wallbox.yaml anpassbar)
-- **Template Sensor Refresh**: Automatisch bei Quell-Sensor-Update
-- **Automation Debouncing**: Mode "single" verhindert mehrfaches Triggern
+- Power is in Watts (not kW)
+- Energy is in kWh
+- Current is in Ampere (not mA)
 
-## Sicherheit
+## 📋 Architecture
 
-- **Authentifizierung**: Modbus TCP hat keine eingebaute Authentifizierung
-  - Nutz Netzwerk-Isolation oder VPN für Produktivumgebungen
-- **Schreibvorgänge**: Nur über explizite Automationen möglich
-  - input_number/input_boolean dienen als Stellschrauben
-- **IP Whitelisting**: Empfohlen auf Firewall-Ebene
+- **ModbusDataCoordinator**: Modbus TCP polling (meter data)
+- **SessionDataCoordinator**: HTTP API (charging history)
+- **34+ Sensor Entities**: Real-time values + history
+- **Control Entities**: Number, Switch for manual control
 
-## Version & Updates
+## 📚 Files
 
-- **Home Assistant Version**: 2024.1+
-- **Wallbox Firmware**: 1.5.41
-- **Modbus Spec**: ECU-BRx Modbus TCP Server v1.07
-- **Letztes Update**: 2026-06-02
+- `coordinator.py` - Modbus + API data polling
+- `sensor.py` - All 34+ sensor entities
+- `number.py` - Adjustable controls (HEMS, current)
+- `switch.py` - Binary controls (charging, phases)
+- `config_flow.py` - UI setup wizard
+- `strings.json` - UI labels & help text
+- `modbus_wallbox.yaml` - Native Modbus config (alternative)
+- `automations_wallbox.yaml` - Session tracking automations
+- `template_sensors_wallbox.yaml` - Derived values (cost, duration)
+- `input_wallbox.yaml` - User inputs (RFID, vehicle names)
+- `wallbox_dashboard.yaml` - Lovelace dashboard
 
-## Support
+## 🚀 Quick Start (5 minutes)
 
-Bei Fragen oder Problemen:
-1. Home Assistant Logs prüfen (Settings → System → Logs)
-2. Wallbox Bedienungsanleitung (Modbus Register)
-3. Home Assistant Community Forum
+1. **Install via HACS**
+   - HACS → Custom repositories → Add `https://github.com/nobelp/mennekes-amtron-ha`
+   - Search "Mennekes AMTRON" → Install
+   - Restart Home Assistant
+
+2. **Create Integration**
+   - Settings → Devices & Services → Create Integration
+   - Search "Mennekes AMTRON"
+   - Enter: host=192.168.2.179, port=502, password
+
+3. **Add Dashboards** (Optional but recommended)
+   - Settings → Dashboards
+   - Create Dashboard "Wallbox"
+   - Edit → Raw config → Copy from `wallbox_dashboard.yaml`
+   - Save
+
+4. **Done!** 🎉
+   - 34+ sensors with live data
+   - Beautiful dashboard
+   - Full control
+
+## 📖 Documentation
+
+- [INSTALL.md](INSTALL.md) - Detailed installation guide
+- [Home Assistant Docs](https://www.home-assistant.io/)
+- [Mennekes AMTRON Docs](https://www.mennekes.de/)
+
+## 🔗 Links
+
+- **GitHub**: https://github.com/nobelp/mennekes-amtron-ha
+- **Issues**: https://github.com/nobelp/mennekes-amtron-ha/issues
+- **HACS**: https://hacs.xyz/
+
+## 📝 Changelog
+
+- **v2.0.0** - Complete stable release with dashboards & automations
+- **v1.7.4** - Real coordinator from production HA
+- **v1.7.0** - Full 34+ sensor integration
+- **v1.6.x** - Initial release
+
+## 📄 License
+
+MIT
 
 ---
 
-**Getestete Funktionalität**:
-- ✓ Modbus TCP Verbindung 192.168.2.179:502
-- ✓ Spannungsmessung L1-L3 (230V, 232V, 233V)
-- ✓ Energiemessung Gesamt (342.972 Wh)
-- ✓ CP Status Abfrage
-- ✓ Vehicle State Detection
-- ✓ Error Code Dekodierung
+**Questions?** Open an [issue](https://github.com/nobelp/mennekes-amtron-ha/issues) on GitHub!
