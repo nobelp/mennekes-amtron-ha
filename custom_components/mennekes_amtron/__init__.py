@@ -1,7 +1,7 @@
 """Mennekes AMTRON Wallbox integration for Home Assistant."""
 
 DOMAIN = "mennekes_amtron"
-VERSION = "1.2.0-beta.1"
+VERSION = "1.2.0"
 
 
 async def async_setup(hass, config):
