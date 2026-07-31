@@ -1,5 +1,11 @@
 {
   "name": "Mennekes AMTRON Home Assistant",
   "homeassistant": "2026.1.0",
+  "description": "Mennekes AMTRON Wallbox integration with Modbus TCP monitoring, REST API charging history, vehicle mapping, and dashboard.",
+  "category": "integration",
+  "documentation": "https://github.com/nobelp/mennekes-amtron-ha/blob/main/README.md",
+  "issues": "https://github.com/nobelp/mennekes-amtron-ha/issues",
+  "authors": ["nobelp"],
+  "country": ["CH", "DE", "AT"],
   "render_readme": true
 }

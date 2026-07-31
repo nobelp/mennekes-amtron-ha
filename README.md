@@ -16,9 +16,9 @@ Complete integration of a Mennekes AMTRON wallbox into Home Assistant:
 
 ### Option 1: HACS (Recommended)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nobelp&repository=mennekes-amtron-ha&category=automation)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nobelp&repository=mennekes-amtron-ha&category=integration)
 
-1. Click the HACS button above or navigate to **HACS → Automations**
+1. Click the HACS button above or navigate to **HACS → Integrations**
 2. Search for **"Mennekes AMTRON"**
 3. Click **"Download"** and follow the instructions
 
