@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mennekes AMTRON Wallbox",
+        "description": "Configure your Mennekes AMTRON wallbox connection.",
+        "data": {
+          "host": "Wallbox IP Address",
+          "modbus_port": "Modbus TCP Port",
+          "api_password": "Installer Password (REST API)",
+          "price_per_kwh": "Electricity Price (CHF/kWh)",
+          "scan_interval": "Modbus Scan Interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to wallbox via Modbus TCP. Check IP and port."
+    },
+    "abort": {
+      "already_configured": "This wallbox is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Mennekes AMTRON Options",
+        "data": {
+          "price_per_kwh": "Electricity Price (CHF/kWh)",
+          "scan_interval": "Modbus Scan Interval (seconds)"
+        }
+      }
+    }
+  }
+}
