@@ -1,6 +1,6 @@
 - name: "Mennekes AMTRON Wallbox"
   type: tcp
-  host: "YOUR_WALLBOX_IP"
+  host: "192.168.2.179"
   port: 502
   close_comm_on_error: false
   timeout: 5
