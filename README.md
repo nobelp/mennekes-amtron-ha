@@ -92,13 +92,26 @@ Die Dashboard-Definition wird mitgeliefert und liegt nach der Installation unter
 > Die URL **muss einen Bindestrich enthalten** — Home Assistant lehnt `wallbox` und
 > `dashboard_wallbox` mit *„Url path needs to contain a hyphen (-)"* ab.
 
-**3.2 Inhalt einfügen** — das neue Dashboard öffnen, oben rechts **Stift → ⋮ →
-„Rohkonfigurationseditor"**, den vorhandenen Text vollständig durch den Inhalt dieser Datei
-ersetzen und speichern:
+**3.2 YAML-Inhalt beschaffen** — gebraucht wird der **Dateiinhalt** (250 Zeilen YAML), nicht der
+Dateipfad. Zwei Wege:
 
-```
-/config/custom_components/mennekes_amtron/dashboards/wallbox_dashboard_integration.yaml
-```
+- **Ohne Dateizugriff:** [wallbox_dashboard_integration.yaml auf GitHub öffnen](https://github.com/nobelp/mennekes-amtron-ha/blob/main/custom_components/mennekes_amtron/dashboards/wallbox_dashboard_integration.yaml)
+  → Symbol **„Copy raw file"** oben rechts über der Datei → der komplette Inhalt liegt in der
+  Zwischenablage
+- **Mit Dateizugriff auf `/config`:** Inhalt ausgeben und kopieren
+  ```bash
+  cat /config/custom_components/mennekes_amtron/dashboards/wallbox_dashboard_integration.yaml
+  ```
+
+**3.3 Inhalt einsetzen** — das neue Dashboard öffnen, oben rechts **Stift → ⋮ →
+„Rohkonfigurationseditor"**, dort **den gesamten vorhandenen Text markieren** (`Strg`+`A`) und mit
+dem kopierten YAML **überschreiben**, dann **Speichern**.
+
+> **Häufiger Fehler:** Nicht den Pfad in den Editor schreiben. Steht dort nur eine einzige Zeile mit
+> `/config/custom_components/...`, wurde der Pfad statt des Inhalts eingefügt.
+
+Zur Kontrolle: Die erste Zeile ohne `#` muss lauten
+`title: Mennekes AMTRON Wallbox (Integration)`.
 
 Diese Variante referenziert ausschließlich Entitäten, die die Integration selbst anlegt — es
 erscheinen keine Karten mit „Entität nicht gefunden". Ein Neustart ist nicht nötig.

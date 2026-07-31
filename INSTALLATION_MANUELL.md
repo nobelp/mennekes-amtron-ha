@@ -411,8 +411,13 @@ Kein Neustart nötig, funktioniert ohne Dateizugriff auf `/config`:
 2. Oben rechts auf das **Stift-Symbol** (Bearbeiten) klicken
 3. Oben rechts auf das **Drei-Punkte-Menü ⋮ → „Rohkonfigurationseditor"**
 4. Den **kompletten Inhalt** der gewählten Datei einfügen und den vorhandenen Text dabei
-   vollständig ersetzen — sie enthält bereits alle vier Reiter
+   vollständig ersetzen — sie enthält bereits alle vier Reiter.
+   **Nicht den Dateipfad einfügen**, sondern das YAML selbst: entweder über den Button
+   `Copy raw file` auf GitHub oder per `cat` aus `/config`.
 5. **Speichern**, dann den Editor schließen
+
+Zur Kontrolle: Die erste Zeile ohne `#` muss `title:` enthalten. Steht im Editor nur eine einzelne
+Zeile mit `/config/custom_components/...`, wurde der Pfad statt des Inhalts eingefügt.
 
 Wer Dateizugriff hat, kann sich den Umweg über den Browser sparen:
 

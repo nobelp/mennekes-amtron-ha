@@ -91,13 +91,25 @@ The dashboard definition ships with the integration and is located after install
 > The URL **must contain a hyphen** — Home Assistant rejects `wallbox` and `dashboard_wallbox` with
 > *"Url path needs to contain a hyphen (-)"*.
 
-**3.2 Insert the content** — open the new dashboard, top right **pencil → ⋮ →
-"Raw configuration editor"**, replace the existing text entirely with the contents of this file and
-save:
+**3.2 Get the YAML content** — what you need is the **file content** (250 lines of YAML), not the
+file path. Two ways:
 
-```
-/config/custom_components/mennekes_amtron/dashboards/wallbox_dashboard_integration.yaml
-```
+- **Without file access:** [open wallbox_dashboard_integration.yaml on GitHub](https://github.com/nobelp/mennekes-amtron-ha/blob/main/custom_components/mennekes_amtron/dashboards/wallbox_dashboard_integration.yaml)
+  → **"Copy raw file"** icon above the file on the right → the whole content is on your clipboard
+- **With file access to `/config`:** print the content and copy it
+  ```bash
+  cat /config/custom_components/mennekes_amtron/dashboards/wallbox_dashboard_integration.yaml
+  ```
+
+**3.3 Paste the content** — open the new dashboard, top right **pencil → ⋮ →
+"Raw configuration editor"**, **select all existing text** (`Ctrl`+`A`) and **overwrite** it with
+the copied YAML, then **Save**.
+
+> **Common mistake:** do not type the path into the editor. If it contains a single line reading
+> `/config/custom_components/...`, the path was pasted instead of the content.
+
+Sanity check: the first line without a `#` must read
+`title: Mennekes AMTRON Wallbox (Integration)`.
 
 This variant references only entities the integration creates, so no card shows "entity not found".
 No restart required.

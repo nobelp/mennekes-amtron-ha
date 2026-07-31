@@ -406,8 +406,13 @@ No restart needed, works without file access to `/config`:
 2. Click the **pencil icon** (edit) at the top right
 3. Click the **three-dot menu ⋮ → "Raw configuration editor"** at the top right
 4. Paste the **entire contents** of the chosen file, replacing the existing text completely — it
-   already contains all four tabs
+   already contains all four tabs.
+   **Do not paste the file path**, paste the YAML itself: either via the `Copy raw file` button on
+   GitHub or with `cat` from `/config`.
 5. **Save**, then close the editor
+
+Sanity check: the first line without a `#` must contain `title:`. If the editor holds a single line
+reading `/config/custom_components/...`, the path was pasted instead of the content.
 
 With file access you can skip the detour through the browser:
 
