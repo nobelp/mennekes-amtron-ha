@@ -66,7 +66,7 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Reading Modbus registers from %s:%d", self._host, self._port)
 
             # CP status + error codes: 104–108 (5 registers)
-            r = await client.read_holding_registers(REG_CP_STATUS, count=5, slave=MODBUS_SLAVE_ID)
+            r = await client.read_holding_registers(REG_CP_STATUS, count=5, unit=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["cp_status"] = r.registers[0]
                 data["error_codes"] = r.registers[1:5]
@@ -146,7 +146,7 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
     async def write_register(self, address: int, value: int) -> bool:
         try:
             client = await self._get_client()
-            result = await client.write_register(address, value, slave=MODBUS_SLAVE_ID)
+            result = await client.write_register(address, value, unit=MODBUS_SLAVE_ID)
             return not result.isError()
         except Exception as err:
             _LOGGER.error("Failed to write register %s = %s: %s", address, value, err)
