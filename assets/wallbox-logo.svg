@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#f0f4f8" stroke="#41BDF5" stroke-width="2"/>
+
+  <!-- Wallbox body -->
+  <rect x="50" y="40" width="100" height="110" rx="8" fill="#1a1a2e" stroke="#41BDF5" stroke-width="2"/>
+
+  <!-- Display screen -->
+  <rect x="60" y="50" width="80" height="35" rx="4" fill="#0f3460" stroke="#41BDF5" stroke-width="1.5"/>
+
+  <!-- Screen gloss effect -->
+  <rect x="62" y="52" width="76" height="8" rx="3" fill="#41BDF5" opacity="0.3"/>
+
+  <!-- LED indicators -->
+  <circle cx="70" cy="102" r="4" fill="#00ff00"/>
+  <circle cx="100" cy="102" r="4" fill="#FFD700"/>
+  <circle cx="130" cy="102" r="4" fill="#ff4444"/>
+
+  <!-- Charging port connector -->
+  <g>
+    <!-- Port housing -->
+    <rect x="75" y="125" width="50" height="15" rx="3" fill="#333" stroke="#41BDF5" stroke-width="1.5"/>
+    <!-- Port opening -->
+    <circle cx="95" cy="132.5" r="4" fill="#666"/>
+    <circle cx="105" cy="132.5" r="4" fill="#666"/>
+  </g>
+
+  <!-- Lightning bolt (charging symbol) -->
+  <g transform="translate(100, 75)">
+    <path d="M 0 -15 L -5 -5 L 0 -5 L -8 8 L 0 8 L -3 20 L 10 -8 L 5 -8 Z" fill="#FFD700" stroke="none"/>
+  </g>
+
+  <!-- Power indicator lines -->
+  <g stroke="#41BDF5" stroke-width="2" stroke-linecap="round" opacity="0.6">
+    <line x1="130" y1="50" x2="150" y2="50"/>
+    <line x1="135" y1="60" x2="155" y2="60"/>
+    <line x1="132" y1="70" x2="152" y2="70"/>
+  </g>
+
+  <!-- Text -->
+  <text x="100" y="170" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#1a1a2e">AMTRON</text>
+</svg>

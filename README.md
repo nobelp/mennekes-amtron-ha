@@ -1,8 +1,10 @@
-# Mennekes AMTRON Wallbox – Home Assistant Integration
+# 🔌 Mennekes AMTRON Wallbox – Home Assistant Integration
+
+<img src="assets/wallbox-logo.svg" alt="Mennekes AMTRON Logo" width="120" height="120" align="right" style="margin: 0 0 20px 20px;">
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Release](https://img.shields.io/github/v/release/nobelp/mennekes-amtron-ha)](https://github.com/nobelp/mennekes-amtron-ha/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/nobelp/mennekes-amtron-ha?sort=semver)](https://github.com/nobelp/mennekes-amtron-ha/releases/latest)
 
 Complete integration of a Mennekes AMTRON wallbox into Home Assistant:
 - **Real-time monitoring** via Modbus TCP (voltage, current, power, charging status)
