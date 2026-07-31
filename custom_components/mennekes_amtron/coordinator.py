@@ -50,7 +50,11 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
     async def _get_client(self):
         from pymodbus.client import AsyncModbusTcpClient
         if self._client is None or not self._client.connected:
-            self._client = AsyncModbusTcpClient(self._host, port=self._port)
+            self._client = AsyncModbusTcpClient(
+                host=self._host,
+                port=self._port,
+                timeout=5
+            )
             await self._client.connect()
         return self._client
 
@@ -59,27 +63,29 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             client = await self._get_client()
             data: dict[str, Any] = {}
 
+            _LOGGER.debug("Reading Modbus registers from %s:%d", self._host, self._port)
+
             # CP status + error codes: 104–108 (5 registers)
-            r = await client.read_holding_registers(REG_CP_STATUS, count=5, device_id=MODBUS_SLAVE_ID)
+            r = await client.read_holding_registers(REG_CP_STATUS, count=5, slave=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["cp_status"] = r.registers[0]
                 data["error_codes"] = r.registers[1:5]
 
             # Vehicle state + CP availability: 122–124 (3 registers)
-            r = await client.read_holding_registers(REG_VEHICLE_STATE, count=3, device_id=MODBUS_SLAVE_ID)
+            r = await client.read_holding_registers(REG_VEHICLE_STATE, count=3, slave=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["vehicle_state"] = r.registers[0]
                 data["cp_availability"] = r.registers[2]
 
             # Safe current + comm timeout: 131–132 (2 registers)
-            r = await client.read_holding_registers(REG_SAFE_CURRENT, count=2, device_id=MODBUS_SLAVE_ID)
+            r = await client.read_holding_registers(REG_SAFE_CURRENT, count=2, slave=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["safe_current"] = r.registers[0]
                 data["comm_timeout"] = r.registers[1]
 
             # Meter Energy/Power/Current/Voltage: 200–227 (28 registers)
             # Each value is int32 (2 registers): L1, L2, L3 for each measurement
-            r = await client.read_holding_registers(REG_ENERGY_L1, count=28, device_id=MODBUS_SLAVE_ID)
+            r = await client.read_holding_registers(REG_ENERGY_L1, count=28, slave=MODBUS_SLAVE_ID)
             if not r.isError():
                 regs = r.registers
                 # Energy: 200-205 (3 x int32)
@@ -104,12 +110,12 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
                 data["voltage_l3"] = regs[26] if len(regs) > 26 else 0
 
             # Signaled current: 706 (1 register)
-            r = await client.read_holding_registers(REG_SIGNALED_CURRENT, count=1, device_id=MODBUS_SLAVE_ID)
+            r = await client.read_holding_registers(REG_SIGNALED_CURRENT, count=1, slave=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["signaled_current"] = r.registers[0]
 
             # Session data: 716-719 (4 registers)
-            r = await client.read_holding_registers(REG_SESSION_ENERGY, count=4, device_id=MODBUS_SLAVE_ID)
+            r = await client.read_holding_registers(REG_SESSION_ENERGY, count=4, slave=MODBUS_SLAVE_ID)
             if not r.isError():
                 regs = r.registers
                 # Charged Energy: 716-717 (1 x uint32)
@@ -118,18 +124,20 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
                 data["session_duration"] = (regs[3] << 16) | regs[2]
 
             # HEMS limit (v1.5): 2000 (1 register)
-            r = await client.read_holding_registers(REG_HEMS_CURRENT_LIMIT, count=1, device_id=MODBUS_SLAVE_ID)
+            r = await client.read_holding_registers(REG_HEMS_CURRENT_LIMIT, count=1, slave=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["hems_current_limit"] = r.registers[0]
 
             # Phase Switch Mode: 2020 (1 register)
-            r = await client.read_holding_registers(REG_PHASE_SWITCH_MODE, count=1, device_id=MODBUS_SLAVE_ID)
+            r = await client.read_holding_registers(REG_PHASE_SWITCH_MODE, count=1, slave=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["phase_switch_mode"] = r.registers[0]
 
+            _LOGGER.debug("Successfully read %d registers", len(data))
             return data
 
         except Exception as err:
+            _LOGGER.error("Modbus communication error: %s", err, exc_info=True)
             if self._client:
                 self._client.close()
                 self._client = None
