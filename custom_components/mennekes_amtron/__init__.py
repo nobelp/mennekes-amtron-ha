@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 
 PLATFORMS = []
 

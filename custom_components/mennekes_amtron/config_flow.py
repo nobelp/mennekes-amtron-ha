@@ -1,18 +1,14 @@
 """Config flow for Mennekes AMTRON Wallbox integration."""
 
-import asyncio
 import logging
 from typing import Any, Dict, Optional
 
-import aiohttp
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_API_PORT, DEFAULT_API_PORT, DEFAULT_API_TIMEOUT, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,32 +25,35 @@ class MennekesConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: Dict[str, str] = {}
 
         if user_input is not None:
-            # Basic validation
+            # Simple validation - no HTTP calls
             host = user_input.get("host", "").strip()
-            port = user_input.get(CONF_API_PORT, DEFAULT_API_PORT)
+            port = user_input.get("api_port", 80)
 
             if not host:
-                errors["base"] = "invalid_host"
-            elif not isinstance(port, int) or port < 1 or port > 65535:
-                errors["base"] = "invalid_port"
+                errors["host"] = "host_required"
+            elif not (1 <= port <= 65535):
+                errors["api_port"] = "invalid_port"
+            elif not user_input.get("password"):
+                errors["password"] = "password_required"
             else:
                 try:
                     await self.async_set_unique_id(host.lower())
                     self._abort_if_unique_id_configured()
+                except Exception as err:
+                    _LOGGER.error("Error setting unique ID: %s", err)
+                    errors["base"] = "unknown_error"
+                else:
                     return self.async_create_entry(
-                        title=f"Mennekes AMTRON ({host})",
+                        title=f"Mennekes AMTRON - {host}",
                         data=user_input,
                     )
-                except Exception as exc:
-                    _LOGGER.exception("Unexpected error: %s", exc)
-                    errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required("host"): str,
-                    vol.Optional(CONF_API_PORT, default=DEFAULT_API_PORT): int,
+                    vol.Optional("api_port", default=80): int,
                     vol.Required("password"): str,
                     vol.Optional("modbus_port", default=502): int,
                     vol.Optional("electricity_price", default=0.29): vol.Coerce(
@@ -66,52 +65,7 @@ class MennekesConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-            description_placeholders={
-                "wallbox_ip": "e.g., 192.168.2.179 or wallbox.local"
-            },
         )
-
-    async def _async_validate_input(self, user_input: Dict[str, Any]) -> None:
-        """Validate the user input allows us to connect."""
-        host = user_input.get("host", "").strip()
-        port = user_input.get(CONF_API_PORT, DEFAULT_API_PORT)
-        password = user_input.get("password", "")
-
-        if not host:
-            raise vol.Invalid("host is required")
-
-        if not isinstance(port, int) or port < 1 or port > 65535:
-            raise vol.Invalid("port must be between 1 and 65535")
-
-        if not password:
-            raise vol.Invalid("password is required")
-
-        try:
-            session = aiohttp_client.async_get_clientsession(self.hass)
-            url = f"http://{host}:{port}/api/v1/PublicInfo"
-
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=DEFAULT_API_TIMEOUT)) as response:
-                if response.status == 401 or response.status == 403:
-                    raise InvalidAuth()
-                if response.status != 200:
-                    raise CannotConnect(
-                        f"HTTP {response.status}: {response.reason}"
-                    )
-
-                data = await response.json()
-                if not data:
-                    raise CannotConnect("Empty response from wallbox")
-
-        except asyncio.TimeoutError as exc:
-            raise asyncio.TimeoutError("Connection timeout to wallbox") from exc
-        except aiohttp.ClientConnectorError as exc:
-            raise CannotConnect(f"Connection error: {exc}") from exc
-        except aiohttp.ClientSSLError as exc:
-            raise CannotConnect(f"SSL/TLS error: {exc}") from exc
-        except aiohttp.ClientConnectorError as exc:
-            raise CannotConnect(f"Connection error: {exc}") from exc
-        except aiohttp.ClientError as exc:
-            raise CannotConnect(f"Network error: {exc}") from exc
 
     @staticmethod
     @callback
@@ -155,11 +109,3 @@ class MennekesOptionsFlow(OptionsFlow):
                 }
             ),
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate invalid authentication."""
