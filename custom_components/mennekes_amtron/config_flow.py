@@ -92,21 +92,22 @@ class MennekesConfigFlow(ConfigFlow, domain=DOMAIN):
             session = aiohttp_client.async_get_clientsession(None)
             url = f"http://{host}:{port}/api/v1/PublicInfo"
 
-            async with asyncio.timeout(DEFAULT_API_TIMEOUT):
-                async with session.get(url) as response:
-                    if response.status == 401 or response.status == 403:
-                        raise InvalidAuth()
-                    if response.status != 200:
-                        raise CannotConnect(
-                            f"HTTP {response.status}: {response.reason}"
-                        )
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=DEFAULT_API_TIMEOUT)) as response:
+                if response.status == 401 or response.status == 403:
+                    raise InvalidAuth()
+                if response.status != 200:
+                    raise CannotConnect(
+                        f"HTTP {response.status}: {response.reason}"
+                    )
 
-                    data = await response.json()
-                    if not data:
-                        raise CannotConnect("Empty response from wallbox")
+                data = await response.json()
+                if not data:
+                    raise CannotConnect("Empty response from wallbox")
 
-        except asyncio.TimeoutError:
-            raise asyncio.TimeoutError("Connection timeout to wallbox") from None
+        except asyncio.TimeoutError as exc:
+            raise asyncio.TimeoutError("Connection timeout to wallbox") from exc
+        except aiohttp.ClientConnectorError as exc:
+            raise CannotConnect(f"Connection error: {exc}") from exc
         except aiohttp.ClientSSLError as exc:
             raise CannotConnect(f"SSL/TLS error: {exc}") from exc
         except aiohttp.ClientConnectorError as exc:
