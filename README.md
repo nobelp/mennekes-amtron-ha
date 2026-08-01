@@ -35,7 +35,7 @@ Funktionen:
 
 **AMTRON 4You 400/500** und **AMTRON 4Business 600/700** kommunizieren identisch — gleicher
 Modbus-TCP-Registersatz auf Port 502, Unit-ID 1. Die Integration deckt dieses gesamte Portfolio ab,
-einschließlich Untervarianten wie 4Business 730 oder 4You 550. Getestet auf einer
+einschliesslich Untervarianten wie 4Business 730 oder 4You 550. Getestet auf einer
 **AMTRON 4Business 730 11 C2** mit Firmware 1.5.41.
 
 Voraussetzung am Gerät: Protokollversion **1.5** und aktiviertes Modbus TCP. Register `2010` meldet
@@ -50,14 +50,14 @@ ist `2` erforderlich.
 
 1. Auf den HACS-Button oben klicken, oder in HACS über **⋮ → Benutzerdefinierte Repositories**
    `https://github.com/nobelp/mennekes-amtron-ha` als Kategorie **Integration** hinzufügen
-2. **„Mennekes AMTRON"** suchen und **herunterladen**
+2. **«Mennekes AMTRON»** suchen und **herunterladen**
 3. Home Assistant **neu starten**
 
 ---
 
 ## Schritt 2: Wallbox konfigurieren
 
-**Einstellungen → Geräte & Dienste → Integration hinzufügen → „Mennekes AMTRON"**
+**Einstellungen → Geräte & Dienste → Integration hinzufügen → «Mennekes AMTRON»**
 
 ![Konfigurationsdialog der Mennekes AMTRON Integration mit den Feldern IP-Adresse, API-Port, Installer-Passwort, Modbus-Port, Strompreis und Aktualisierungsintervall](docs/images/config-flow-ui.png)
 
@@ -83,8 +83,8 @@ Strompreis und Intervall lassen sich später jederzeit über **Konfigurieren** a
 Die Dashboard-Definition wird mitgeliefert und liegt nach der Installation unter
 `/config/custom_components/mennekes_amtron/dashboards/`.
 
-**3.1 Dashboard anlegen** — **Einstellungen → Dashboards → „+ Dashboard hinzufügen" →
-„Neues Dashboard von Grund auf"**:
+**3.1 Dashboard anlegen** — **Einstellungen → Dashboards → «+ Dashboard hinzufügen» →
+«Neues Dashboard von Grund auf»**:
 
 | Feld | Wert |
 |---|---|
@@ -94,13 +94,13 @@ Die Dashboard-Definition wird mitgeliefert und liegt nach der Installation unter
 | **In Seitenleiste anzeigen** | aktiviert |
 
 > Die URL **muss einen Bindestrich enthalten** — Home Assistant lehnt `wallbox` und
-> `dashboard_wallbox` mit *„Url path needs to contain a hyphen (-)"* ab.
+> `dashboard_wallbox` mit *«Url path needs to contain a hyphen (-)»* ab.
 
 **3.2 YAML-Inhalt beschaffen** — gebraucht wird der **Dateiinhalt** (250 Zeilen YAML), nicht der
 Dateipfad. Zwei Wege:
 
 - **Ohne Dateizugriff:** [wallbox_dashboard_integration.yaml auf GitHub öffnen](https://github.com/nobelp/mennekes-amtron-ha/blob/main/custom_components/mennekes_amtron/dashboards/wallbox_dashboard_integration.yaml)
-  → Symbol **„Copy raw file"** oben rechts über der Datei → der komplette Inhalt liegt in der
+  → Symbol **«Copy raw file»** oben rechts über der Datei → der komplette Inhalt liegt in der
   Zwischenablage
 - **Mit Dateizugriff auf `/config`:** Inhalt ausgeben und kopieren
   ```bash
@@ -108,7 +108,7 @@ Dateipfad. Zwei Wege:
   ```
 
 **3.3 Inhalt einsetzen** — das neue Dashboard öffnen, oben rechts **Stift → ⋮ →
-„Rohkonfigurationseditor"**, dort **den gesamten vorhandenen Text markieren** (`Strg`+`A`) und mit
+«Rohkonfigurationseditor»**, dort **den gesamten vorhandenen Text markieren** (`Strg`+`A`) und mit
 dem kopierten YAML **überschreiben**, dann **Speichern**.
 
 > **Häufiger Fehler:** Nicht den Pfad in den Editor schreiben. Steht dort nur eine einzige Zeile mit
@@ -117,8 +117,8 @@ dem kopierten YAML **überschreiben**, dann **Speichern**.
 Zur Kontrolle: Die erste Zeile ohne `#` muss lauten
 `title: Mennekes AMTRON Wallbox (Integration)`.
 
-Diese Variante referenziert ausschließlich Entitäten, die die Integration selbst anlegt — es
-erscheinen keine Karten mit „Entität nicht gefunden". Ein Neustart ist nicht nötig.
+Diese Variante referenziert ausschliesslich Entitäten, die die Integration selbst anlegt — es
+erscheinen keine Karten mit «Entität nicht gefunden». Ein Neustart ist nicht nötig.
 
 **Ergebnis:** vier Reiter.
 
@@ -144,7 +144,7 @@ Beides läuft über den Reiter **Konfiguration** — ohne Dateien, ohne Scripts:
 1. **RFID auswählen** — die Liste füllt sich automatisch aus der Ladehistorie
 2. **Fahrzeugname** eintragen
 3. **Zuweisen** drücken — die Zuordnung landet in den Optionen des Integrationseintrags und
-   erscheint sofort in der Karte „Bekannte Fahrzeuge" samt Verbrauch und Kosten
+   erscheint sofort in der Karte «Bekannte Fahrzeuge» samt Verbrauch und Kosten
 
 **Ladehistorie und Systemereignisse werden nur auf Knopfdruck abgerufen**, dazu einmal beim Start
 von Home Assistant. Jeder Abruf kostet einen vollständigen Login an der Wallbox-API, ein Zeitplan
@@ -161,7 +161,7 @@ Sind noch keine Daten geladen, zeigen die Tabellen einen entsprechenden Hinweis 
 
 ## Wenn es nicht funktioniert
 
-**„No Modbus TCP connection … refused or immediately closed the session"**
+**«No Modbus TCP connection … refused or immediately closed the session»**
 
 Die Wallbox bedient **nur einen Modbus-TCP-Client gleichzeitig**. Diese Meldung erscheint, wenn
 bereits ein anderer Client verbunden ist. Typische Fälle:
@@ -174,7 +174,7 @@ bereits ein anderer Client verbunden ist. Typische Fälle:
 Prüfen lässt sich das von einem beliebigen Rechner aus: nimmt die Wallbox die TCP-Verbindung an und
 trennt sie sofort wieder, ist der Slot belegt.
 
-**Sensoren zeigen 0 oder „unavailable"** — Modbus TCP am Gerät aktivieren (Register `2010`
+**Sensoren zeigen 0 oder «unavailable»** — Modbus TCP am Gerät aktivieren (Register `2010`
 muss `1` oder `2` melden).
 
 **`systemStatus: UpdateInProgress` in der Wallbox-API** ist kein Grund für abgewiesene
