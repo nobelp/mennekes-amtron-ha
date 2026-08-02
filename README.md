@@ -63,7 +63,7 @@ ist `2` erforderlich.
 
 | Feld | Bedeutung | Standard |
 |------|-----------|----------|
-| **IP-Adresse oder Hostname** | Adresse der Wallbox im Netzwerk, z. B. `192.168.2.179` oder `wallbox.local` | – (Pflicht) |
+| **IP-Adresse oder Hostname** | Adresse der Wallbox im Netzwerk, z. B. `192.xxx.xxx.xxx` oder `wallbox.local` | – (Pflicht) |
 | **API-Port** | HTTP-Port für die REST-Aufrufe | `80` |
 | **Installer-Passwort** | Passwort des Installer-Zugangs der Wallbox | – (Pflicht) |
 | **Modbus-Port** | TCP-Port des Modbus-Protokolls | `502` |

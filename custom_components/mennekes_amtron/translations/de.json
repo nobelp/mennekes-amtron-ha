@@ -13,7 +13,7 @@
           "scan_interval": "Aktualisierungsintervall (Sekunden, 1-3600)"
         },
         "data_description": {
-          "host": "z.B. 192.168.2.179 oder wallbox.local",
+          "host": "z.B. 192.xxx.xxx.xxx oder wallbox.local",
           "api_port": "HTTP-API-Port für REST-Aufrufe",
           "password": "Installer-Passwort für API-Authentifizierung",
           "modbus_port": "TCP-Port für Modbus-Protokoll",

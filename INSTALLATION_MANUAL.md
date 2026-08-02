@@ -30,18 +30,6 @@ git clone https://github.com/nobelp/mennekes-amtron-ha.git ~/HA_Menneckes
 
 ---
 
-## ✅ Home Assistant Quality Scale
-
-| Aspect | Status | Details |
-|--------|--------|---------|
-| **Code Quality** | ⭐⭐⭐⭐ | Python scripts with error handling |
-| **Documentation** | ⭐⭐⭐⭐⭐ | Comprehensive in German + English |
-| **Testing** | ⭐⭐⭐ | Tested on HA 2026.5.4 + AMTRON 730 |
-| **Maintainability** | ⭐⭐⭐⭐ | Modular YAML + Python structure |
-| **Security** | ⭐⭐⭐⭐ | No hardcoded passwords/IPs, .env support |
-
----
-
 ## Overview: How Everything Connects
 
 ```
@@ -688,7 +676,7 @@ All settings and vehicle management in one place.
 The most convenient way to assign a vehicle name to an RFID tag:
 
 1. **Select RFID** from the dropdown (`input_select.wallbox_rfid_selector`)
-   - Format: `04A5F3D2CC1D90 — Kessi`
+   - Format: `A1B2C3D4E5F6 — Kessi`
    - Automatically populated with all known RFIDs after each fetch
    - Shows the currently stored name (or "Unknown" if new)
 2. **Enter new vehicle name** (`input_text.wallbox_vehicle_name_new`)
@@ -737,8 +725,8 @@ This price is embedded into session data by the fetch script. In the dashboard, 
 
 ```json
 {
-  "04A5F3D2CC1D90": "Kessi",
-  "049D869A5A2294": "Tessi"
+  "A1B2C3D4E5F6": "Kessi",
+  "F6E5D4C3B2A1": "Tessi"
 }
 ```
 
@@ -815,7 +803,7 @@ Automation trigger (start or /1h)
     │       └── ['All', 'May 2026', 'April 2026', ...]
     │
     └── input_select.set_options(wallbox_rfid_selector)
-            └── ['Please select...', '04A5F3D2CC1D90 — Kessi', '049D869A5A2294 — Tessi']
+            └── ['Please select...', 'A1B2C3D4E5F6 — Kessi', 'F6E5D4C3B2A1 — Tessi']
 ```
 
 ---
@@ -844,8 +832,8 @@ nano /volume1/docker/homeassistant/wallbox_vehicles.json
 
 # Format:
 {
-  "04A5F3D2CC1D90": "Kessi",
-  "049D869A5A2294": "Tessi",
+  "A1B2C3D4E5F6": "Kessi",
+  "F6E5D4C3B2A1": "Tessi",
   "NEW_RFID_ID": "New Vehicle"
 }
 ```
@@ -1150,8 +1138,8 @@ ping 10.x.x.x
 
 | RFID | Vehicle |
 |------|---------|
-| `04A5F3D2CC1D90` | Kessi (Tesla) |
-| `049D869A5A2294` | Tessi (Tesla) |
+| `A1B2C3D4E5F6` | Kessi (example) |
+| `F6E5D4C3B2A1` | Tessi (example) |
 
 ---
 
