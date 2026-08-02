@@ -1,3 +1,4 @@
 {
-  "name": "Mennekes AMTRON Wallbox"
+  "name": "Mennekes AMTRON Wallbox",
+  "homeassistant": "2026.1.0"
 }

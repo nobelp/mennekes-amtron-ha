@@ -8,6 +8,22 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.1.1] – 2026-08-02
+
+Die Integration erfüllt nun auch die hassfest-Prüfung für die Aufnahme in den
+offiziellen HACS-Katalog. Das Laufzeitverhalten der Integration ist unverändert.
+
+*The integration now also passes hassfest validation for inclusion in the
+official HACS catalogue. Runtime behaviour is unchanged.*
+
+### Geändert / Changed
+
+| Deutsch | English |
+|---------|---------|
+| Offiziellen hassfest-Workflow ergänzt und Versionsnummer für den Katalog-Release auf 2.1.1 erhöht. | Added the official hassfest workflow and bumped the version to 2.1.1 for the catalogue release. |
+
+---
+
 ## [2.1.0] – 2026-07-31
 
 Systemereignisse und RFID-Zuordnung laufen jetzt ohne manuelle Installation.
