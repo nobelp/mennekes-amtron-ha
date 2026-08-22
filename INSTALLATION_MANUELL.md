@@ -56,7 +56,7 @@ git clone https://github.com/nobelp/mennekes-amtron-ha.git ~/HA_Menneckes
         ▼
   /config/wallbox_sessions.json    (Ladevorgänge + Monatsdaten)
   /config/wallbox_vehicles.json    (RFID → Fahrzeugname Mapping)
-  /config/wallbox_config.json      (Strompreis CHF/kWh)
+  /config/wallbox_config.json      (Strompreis pro kWh)
   /config/wallbox_fetch.log        (Fetch-Log für Debugging)
 ```
 
@@ -181,7 +181,7 @@ cp python_scripts/write_vehicles.py /config/python_scripts/
 cp python_scripts/assign_vehicle.py /config/python_scripts/
 
 # Konfigurationsdateien
-cp wallbox_config.json /config/
+cp wallbox_config.example.json /config/wallbox_config.json
 cp wallbox_vehicles.json /config/
 
 # Dashboard: erst in Schritt 6 anlegen — die Storage-Datei wirkt nur,
@@ -228,6 +228,7 @@ command_line:
         - vehicle_totals
         - last_session_kwh
         - last_vehicle
+        - price_per_kwh
       scan_interval: 3600
 
 # Shell-Commands
@@ -614,7 +615,7 @@ Ladevorgänge aus der REST-API – Panel-Ansicht (Vollbreite):
 │ Statistik &      │  ApexCharts Balkendiagramm               │
 │ Filter (1/3)     │  Monatsverbrauch pro Fahrzeug (2/3)      │
 ├──────────────────┴─────────────────────────────────────────┤
-│  Monatstabelle (kWh & CHF) – volle Breite                  │
+│  Monatstabelle (kWh & Kosten) – volle Breite               │
 ├──────────────────────────────────────────────────────────────┤
 │  Ladevorgänge-Tabelle – volle Breite                        │
 └──────────────────────────────────────────────────────────────┘
@@ -624,7 +625,7 @@ Ladevorgänge aus der REST-API – Panel-Ansicht (Vollbreite):
 
 Zeigt Gesamtübersicht und den Monatsfilter:
 - Anzahl Ladevorgänge
-- Gesamtenergie / Gesamtkosten CHF
+- Gesamtenergie / Gesamtkosten
 - Kessi gesamt / Tessi gesamt
 - kWh & Kosten aktueller Monat
 - **Monatsfilter-Dropdown** (`input_select.wallbox_month_filter`): Wähle einen Monat → Ladevorgänge-Tabelle filtert automatisch
@@ -645,19 +646,19 @@ Gestapeltes Balkendiagramm mit einem Balken pro Monat, aufgeteilt nach Fahrzeug 
 
 #### Monatstabelle (volle Breite)
 
-Tabelle aller Monate mit exakten kWh- und CHF-Werten:
+Tabelle aller Monate mit exakten kWh- und Kostenwerten (Währung aus `input_text.wallbox_currency`):
 
-| Monat | Kessi kWh | CHF | Tessi kWh | CHF | Gesamt kWh | CHF |
+| Monat | Kessi kWh | EUR | Tessi kWh | EUR | Gesamt kWh | EUR |
 |-------|-----------|-----|-----------|-----|------------|-----|
 | Mai 2026 | 298.1 | 86.44 | 0.0 | 0.00 | 298.1 | 86.44 |
 | April 2026 | 5.2 | 1.50 | 39.7 | 11.51 | 44.9 | 13.01 |
 
-- Preis kommt aus `input_number.wallbox_price_per_kwh` (live anpassbar)
+- Preis kommt aus `input_number.wallbox_price_per_kwh`, Währung aus `input_text.wallbox_currency` (beides live anpassbar)
 - Neueste Monate oben
 
 #### Ladevorgänge-Tabelle (volle Breite)
 
-Alle Ladevorgänge mit Datum, Fahrzeug, Dauer, kWh und CHF.
+Alle Ladevorgänge mit Datum, Fahrzeug, Dauer, kWh und Kosten.
 
 - Wird durch den Monatsfilter gefiltert
 - Bei "Alle": zeigt Fahrzeug-Gesamtsummen am Ende
@@ -713,7 +714,8 @@ Alle Konfigurationsparameter:
 
 | Entität | Beschreibung |
 |---------|-------------|
-| `input_number.wallbox_price_per_kwh` | Strompreis CHF/kWh – Ändert alle Kostenberechnungen sofort |
+| `input_number.wallbox_price_per_kwh` | Strompreis pro kWh – Ändert alle Kostenberechnungen sofort |
+| `input_text.wallbox_currency` | Währungscode (ISO 4217, z. B. `EUR`) für alle Kostenanzeigen |
 | `input_number.wallbox_hems_current_limit` | HEMS Stromlimit (0 = Pause, 6-16A) |
 | `input_number.wallbox_safe_current` | Safe Current (0-32A) |
 | `input_number.wallbox_comm_timeout` | Kommunikations-Timeout (1-300s) |
@@ -732,9 +734,13 @@ Alle Konfigurationsparameter:
 
 ```json
 {
-  "price_per_kwh_chf": 0.29
+  "price_per_kwh": 0.29
 }
 ```
+
+Der alte Schlüssel `price_per_kwh_chf` wird weiterhin gelesen, wenn `price_per_kwh` fehlt. Der
+Fetch liefert nur Zahlen; die Währung, die Dashboard und Kosten-Sensoren anzeigen, kommt aus
+`input_text.wallbox_currency`.
 
 Dieser Preis wird vom Fetch-Script in die Sessions-Daten eingebettet. Im Dashboard kann der Preis live über `input_number.wallbox_price_per_kwh` angepasst werden – das wirkt sofort auf alle Anzeigen ohne neuen Fetch.
 
@@ -755,8 +761,8 @@ Wird von `fetch_charging_sessions.py` gelesen um Sessions den Fahrzeugnamen zuzu
 
 Der Strompreis wird **zweistufig** konfiguriert:
 
-1. **`wallbox_config.json`** (`price_per_kwh_chf: 0.29`) – wird beim Fetch gelesen und in `wallbox_sessions.json` eingebettet
-2. **`input_number.wallbox_price_per_kwh`** (Standard: 0.29) – Live-Wert für HA-Template-Sensoren und Dashboard
+1. **`wallbox_config.json`** (`price_per_kwh: 0.29`) – wird beim Fetch gelesen und in `wallbox_sessions.json` eingebettet
+2. **`input_number.wallbox_price_per_kwh`** (Standard: 0.29) und **`input_text.wallbox_currency`** (Standard: `CHF`) – Live-Werte für HA-Template-Sensoren und Dashboard
 
 **Kostenberechnung**: `energy_kwh × price_per_kwh`
 
@@ -907,9 +913,9 @@ Unbekannte RFIDs erscheinen als `"RFID_CODE — RFID_CODE"` (RFID = Name, noch n
 
 | Entität | Beschreibung |
 |---------|-------------|
-| `sensor.wallbox_kosten_gesamt_chf` | Gesamtkosten CHF |
+| `sensor.wallbox_kosten_gesamt` | Gesamtkosten (Währung im Attribut `currency`) |
 | `sensor.wallbox_kwh_aktueller_monat` | kWh im aktuellen Monat |
-| `sensor.wallbox_kosten_aktueller_monat_chf` | Kosten im aktuellen Monat CHF |
+| `sensor.wallbox_kosten_aktueller_monat` | Kosten im aktuellen Monat (Währung im Attribut `currency`) |
 | `sensor.wallbox_kwh_kessi_gesamt` | Kessi Gesamtverbrauch kWh |
 | `sensor.wallbox_kwh_tessi_gesamt` | Tessi Gesamtverbrauch kWh |
 
@@ -932,7 +938,8 @@ Unbekannte RFIDs erscheinen als `"RFID_CODE — RFID_CODE"` (RFID = Name, noch n
 
 | Entität | Beschreibung |
 |---------|-------------|
-| `input_number.wallbox_price_per_kwh` | Strompreis CHF/kWh (live, 0.01–2.00) |
+| `input_number.wallbox_price_per_kwh` | Strompreis pro kWh (live, 0.01–2.00) |
+| `input_text.wallbox_currency` | Währungscode, ISO 4217 (live, Standard `CHF`) |
 | `input_number.wallbox_hems_current_limit` | HEMS-Limit setzen (0-16A) |
 | `input_number.wallbox_safe_current` | Safe Current setzen (0-32A) |
 | `input_number.wallbox_comm_timeout` | Comm Timeout setzen (1-300s) |

@@ -8,7 +8,7 @@ CONF_WALLBOX_HOST = "host"
 CONF_MODBUS_PORT = "modbus_port"
 CONF_API_PORT = "api_port"
 CONF_API_PASSWORD = "api_password"
-CONF_PRICE_PER_KWH = "price_per_kwh"
+CONF_PRICE_PER_KWH = "price_per_kwh"  # in the Home Assistant currency (hass.config.currency)
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VEHICLES = "vehicles"  # options key: {rfid: vehicle name}
 

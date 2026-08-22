@@ -39,6 +39,8 @@ from .entity import build_device_info
 class AmtronSensorDescription(SensorEntityDescription):
     value_fn: Any = None
     attr_fn: Any = None
+    # Use the configured currency as the unit instead of a fixed one.
+    currency_unit: bool = False
 
 
 MODBUS_SENSORS: tuple[AmtronSensorDescription, ...] = (
@@ -220,8 +222,9 @@ SESSION_SENSORS: tuple[AmtronSensorDescription, ...] = (
     AmtronSensorDescription(
         key="total_cost",
         name="Total Cost",
-        native_unit_of_measurement="CHF",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        currency_unit=True,
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
     ),
     AmtronSensorDescription(
         key="last_session_kwh",
@@ -242,6 +245,8 @@ SESSION_SENSORS: tuple[AmtronSensorDescription, ...] = (
             "sessions": d.get("sessions", [])[:20],
             "monthly_summary": d.get("monthly_summary", []),
             "vehicle_totals": d.get("vehicle_totals", {}),
+            "currency": d.get("currency"),
+            "price_per_kwh": d.get("price_per_kwh"),
         },
     ),
 )
@@ -319,6 +324,13 @@ class SessionSensor(CoordinatorEntity[SessionDataCoordinator], SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self._attr_device_info = device_info
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        desc = self.entity_description
+        if desc.currency_unit:
+            return self.coordinator.currency
+        return desc.native_unit_of_measurement
 
     @property
     def native_value(self):
@@ -399,4 +411,5 @@ class KnownVehiclesSensor(CoordinatorEntity[SessionDataCoordinator], SensorEntit
         return {
             "vehicles": dict(self.coordinator.vehicles),
             "vehicle_totals": (self.coordinator.data or {}).get("vehicle_totals", {}),
+            "currency": self.coordinator.currency,
         }
