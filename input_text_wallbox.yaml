@@ -43,3 +43,13 @@ wallbox_vehicle_name_new:
   max: 30
   icon: mdi:car-electric
   mode: text
+
+# Währung der Kostenanzeigen (ISO-4217-Code, z. B. CHF oder EUR). Wird vom
+# Dashboard und den Kosten-Template-Sensoren gelesen.
+wallbox_currency:
+  name: "Wallbox Währung"
+  initial: "CHF"
+  min: 3
+  max: 3
+  pattern: "[A-Z]{3}"
+  icon: mdi:currency-sign

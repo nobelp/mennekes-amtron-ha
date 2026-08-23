@@ -1,6 +1,6 @@
 - name: "Mennekes AMTRON Wallbox"
   type: tcp
-  host: "192.168.2.179"
+  host: "192.xxx.xxx.xxx"  # Placeholder; replace with the wallbox IP
   port: 502
   close_comm_on_error: false
   timeout: 5

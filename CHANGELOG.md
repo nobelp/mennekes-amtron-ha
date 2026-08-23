@@ -8,6 +8,46 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.2.0-beta.1] - 2026-08-23
+
+Die Kostenberechnung folgt der Währung von Home Assistant — die Integration ist nicht mehr auf CHF
+festgelegt.
+
+*The cost calculation follows the Home Assistant currency — the integration is no longer fixed to
+CHF.*
+
+> **Nach dem Update:** Währung unter **Einstellungen → System → Allgemein** prüfen. Home Assistant
+> steht ab Werk auf `EUR`; wer in CHF abrechnet, stellt dort `CHF` ein.
+>
+> *After the update: check the currency under **Settings → System → General**. Home Assistant
+> defaults to `EUR`; if you bill in CHF, select `CHF` there.*
+
+### Hinzugefügt / Added
+
+| Deutsch | English |
+|---------|---------|
+| Die Integration nutzt die Währung von Home Assistant (**Einstellungen → System → Allgemein**), wie das Energie-Dashboard. Eine Änderung dort wirkt sofort, ohne Neustart. Der Strompreis wird in dieser Währung eingegeben. | The integration uses the Home Assistant currency (**Settings → System → General**), like the Energy dashboard. Changing it there takes effect immediately, no restart. The electricity price is entered in that currency. |
+| `sensor.mennekes_amtron_total_cost` trägt die Home-Assistant-Währung als Einheit und die Geräteklasse `monetary`. | `sensor.mennekes_amtron_total_cost` carries the Home Assistant currency as its unit and the `monetary` device class. |
+| Die Attribute `currency` und `price_per_kwh` an `sensor.mennekes_amtron_sessions_summary` sowie `currency` an `sensor.mennekes_amtron_known_vehicles`; das mitgelieferte Dashboard zeigt die Währung in den Kostenspalten. | The attributes `currency` and `price_per_kwh` on `sensor.mennekes_amtron_sessions_summary` and `currency` on `sensor.mennekes_amtron_known_vehicles`; the shipped dashboard shows the currency in the cost columns. |
+| **Manuelle Installation:** Helfer `input_text.wallbox_currency` (Standard `CHF`) und `input_number.wallbox_price_per_kwh` — letzterer wurde in der Doku referenziert, aber nie mitgeliefert. `wallbox_dashboard.yaml` (Vollversion) zeigt die Währung aus dem Helfer; `wallbox_config.json` heisst der Preisschlüssel jetzt `price_per_kwh` (alter Schlüssel `price_per_kwh_chf` wird weiter gelesen). | **Manual installation:** helpers `input_text.wallbox_currency` (default `CHF`) and `input_number.wallbox_price_per_kwh` — the latter was referenced in the docs but never shipped. `wallbox_dashboard.yaml` (full version) shows the currency from the helper; in `wallbox_config.json` the price key is now `price_per_kwh` (legacy key `price_per_kwh_chf` still read). |
+
+### Geändert / Changed
+
+| Deutsch | English |
+|---------|---------|
+| **Dashboard-Anpassung nötig:** Das Attribut `cost_chf` je Ladevorgang in `sessions` heisst jetzt `cost`. Wer das Dashboard vor 2.2.0 eingefügt hat, ersetzt `s.cost_chf` durch `s.cost` oder fügt die neue Datei erneut ein. | **Dashboard update required:** the per-session attribute `cost_chf` in `sessions` is now `cost`. If you pasted the dashboard before 2.2.0, replace `s.cost_chf` with `s.cost` or paste the new file again. |
+| `sensor.mennekes_amtron_total_cost` nutzt die Zustandsklasse `total` statt `total_increasing`, wie Home Assistant es für Geldbeträge verlangt. | `sensor.mennekes_amtron_total_cost` uses the `total` state class instead of `total_increasing`, as Home Assistant requires for monetary values. |
+| **Manuelle Installation, Anpassung nötig:** Die Kosten-Template-Sensoren heissen jetzt `sensor.wallbox_kosten_gesamt` und `sensor.wallbox_kosten_aktueller_monat` (vorher mit `_chf`). Template-Sensoren können keine dynamische Einheit, daher tragen sie keine feste Einheit mehr, sondern das Attribut `currency`. `templates/wallbox.yaml`, `input_*_wallbox.yaml` und `wallbox_dashboard.yaml` neu kopieren; die alten `_chf`-Entitäten löschen. Im Fetch-Ergebnis heisst `cost_chf` jetzt `cost`, `total_cost_chf` jetzt `total_cost`. | **Manual installation, update required:** the cost template sensors are now `sensor.wallbox_kosten_gesamt` and `sensor.wallbox_kosten_aktueller_monat` (previously with `_chf`). Template sensors cannot have a dynamic unit, so they no longer carry a fixed unit but the attribute `currency`. Re-copy `templates/wallbox.yaml`, `input_*_wallbox.yaml` and `wallbox_dashboard.yaml`; delete the old `_chf` entities. In the fetch output `cost_chf` is now `cost`, `total_cost_chf` is now `total_cost`. |
+
+### Behoben / Fixed
+
+| Deutsch | English |
+|---------|---------|
+| Änderungen an Strompreis und Intervall unter **Konfigurieren** wurden gespeichert, aber nie angewendet — die Integration las weiterhin die Werte aus der Ersteinrichtung. Optionen haben jetzt Vorrang. | Changes to the electricity price and interval under **Configure** were stored but never applied — the integration kept reading the values from the initial setup. Options now take precedence. |
+| Die Feldbezeichnungen im Einrichtungsdialog passten nicht zu den Feldschlüsseln (`electricity_price` statt `price_per_kwh`, `password` statt `api_password`), daher erschienen die technischen Namen. Ebenso die Fehlermeldungen. | The field labels in the setup dialog did not match the field keys (`electricity_price` instead of `price_per_kwh`, `password` instead of `api_password`), so the technical names were shown. Same for the error messages. |
+
+---
+
 ## [2.1.1] – 2026-08-02
 
 Die Integration erfüllt nun auch die hassfest-Prüfung für die Aufnahme in den

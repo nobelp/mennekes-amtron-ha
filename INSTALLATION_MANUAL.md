@@ -30,18 +30,6 @@ git clone https://github.com/nobelp/mennekes-amtron-ha.git ~/HA_Menneckes
 
 ---
 
-## ✅ Home Assistant Quality Scale
-
-| Aspect | Status | Details |
-|--------|--------|---------|
-| **Code Quality** | ⭐⭐⭐⭐ | Python scripts with error handling |
-| **Documentation** | ⭐⭐⭐⭐⭐ | Comprehensive in German + English |
-| **Testing** | ⭐⭐⭐ | Tested on HA 2026.5.4 + AMTRON 730 |
-| **Maintainability** | ⭐⭐⭐⭐ | Modular YAML + Python structure |
-| **Security** | ⭐⭐⭐⭐ | No hardcoded passwords/IPs, .env support |
-
----
-
 ## Overview: How Everything Connects
 
 ```
@@ -56,7 +44,7 @@ git clone https://github.com/nobelp/mennekes-amtron-ha.git ~/HA_Menneckes
         ▼
   /config/wallbox_sessions.json    (charging sessions + monthly data)
   /config/wallbox_vehicles.json    (RFID → vehicle name mapping)
-  /config/wallbox_config.json      (electricity price CHF/kWh)
+  /config/wallbox_config.json      (electricity price per kWh)
   /config/wallbox_fetch.log        (fetch log for debugging)
 ```
 
@@ -179,7 +167,7 @@ cp python_scripts/write_vehicles.py /config/python_scripts/
 cp python_scripts/assign_vehicle.py /config/python_scripts/
 
 # Configuration files
-cp wallbox_config.json /config/
+cp wallbox_config.example.json /config/wallbox_config.json
 cp wallbox_vehicles.json /config/
 
 # Dashboard: set up in step 6 — the storage file only takes effect once the
@@ -226,6 +214,7 @@ command_line:
         - vehicle_totals
         - last_session_kwh
         - last_vehicle
+        - price_per_kwh
       scan_interval: 3600
 
 # Shell commands
@@ -609,7 +598,7 @@ Charging sessions from the REST API – panel view (full width):
 │ Statistics &     │  ApexCharts Bar Chart                    │
 │ Filter (1/3)     │  Monthly consumption per vehicle (2/3)   │
 ├──────────────────┴─────────────────────────────────────────┤
-│  Monthly table (kWh & CHF) – full width                     │
+│  Monthly table (kWh & costs) – full width                   │
 ├─────────────────────────────────────────────────────────────┤
 │  Charging sessions table – full width                        │
 └─────────────────────────────────────────────────────────────┘
@@ -619,7 +608,7 @@ Charging sessions from the REST API – panel view (full width):
 
 Shows overall summary and month filter:
 - Number of charging sessions
-- Total energy / total costs CHF
+- Total energy / total costs
 - Vehicle 1 total / Vehicle 2 total
 - kWh & costs current month
 - **Month filter dropdown** (`input_select.wallbox_month_filter`): Select a month → charging sessions table filters automatically
@@ -640,19 +629,19 @@ Stacked bar chart with one bar per month, broken down by vehicle (blue = vehicle
 
 #### Monthly Table (full width)
 
-Table of all months with exact kWh and CHF values:
+Table of all months with exact kWh and cost values (currency from `input_text.wallbox_currency`):
 
-| Month | Vehicle 1 kWh | CHF | Vehicle 2 kWh | CHF | Total kWh | CHF |
+| Month | Vehicle 1 kWh | EUR | Vehicle 2 kWh | EUR | Total kWh | EUR |
 |-------|---------------|-----|---------------|-----|-----------|-----|
 | May 2026 | 298.1 | 86.44 | 0.0 | 0.00 | 298.1 | 86.44 |
 | April 2026 | 5.2 | 1.50 | 39.7 | 11.51 | 44.9 | 13.01 |
 
-- Price comes from `input_number.wallbox_price_per_kwh` (adjustable live)
+- Price comes from `input_number.wallbox_price_per_kwh`, currency from `input_text.wallbox_currency` (both adjustable live)
 - Most recent months at the top
 
 #### Charging Sessions Table (full width)
 
-All charging sessions with date, vehicle, duration, kWh and CHF.
+All charging sessions with date, vehicle, duration, kWh and costs.
 
 - Filtered by the month filter
 - With "All": shows vehicle totals at the bottom
@@ -688,7 +677,7 @@ All settings and vehicle management in one place.
 The most convenient way to assign a vehicle name to an RFID tag:
 
 1. **Select RFID** from the dropdown (`input_select.wallbox_rfid_selector`)
-   - Format: `04A5F3D2CC1D90 — Kessi`
+   - Format: `A1B2C3D4E5F6 — Kessi`
    - Automatically populated with all known RFIDs after each fetch
    - Shows the currently stored name (or "Unknown" if new)
 2. **Enter new vehicle name** (`input_text.wallbox_vehicle_name_new`)
@@ -708,7 +697,8 @@ All configuration parameters:
 
 | Entity | Description |
 |--------|-------------|
-| `input_number.wallbox_price_per_kwh` | Electricity price CHF/kWh – changes all cost calculations immediately |
+| `input_number.wallbox_price_per_kwh` | Electricity price per kWh – changes all cost calculations immediately |
+| `input_text.wallbox_currency` | Currency code (ISO 4217, e.g. `EUR`) shown on all cost displays |
 | `input_number.wallbox_hems_current_limit` | HEMS current limit (0 = pause, 6-16A) |
 | `input_number.wallbox_safe_current` | Safe current (0-32A) |
 | `input_number.wallbox_comm_timeout` | Communication timeout (1-300s) |
@@ -727,9 +717,13 @@ Older method with fixed slots for 4 vehicles. Button "Save all 4 slots & reload"
 
 ```json
 {
-  "price_per_kwh_chf": 0.29
+  "price_per_kwh": 0.29
 }
 ```
+
+The legacy key `price_per_kwh_chf` is still read if `price_per_kwh` is missing. The fetch only
+produces numbers; the currency shown by the dashboard and the cost sensors comes from
+`input_text.wallbox_currency`.
 
 This price is embedded into session data by the fetch script. In the dashboard, the price can be adjusted live via `input_number.wallbox_price_per_kwh` – this takes effect immediately on all displays without a new fetch.
 
@@ -737,8 +731,8 @@ This price is embedded into session data by the fetch script. In the dashboard, 
 
 ```json
 {
-  "04A5F3D2CC1D90": "Kessi",
-  "049D869A5A2294": "Tessi"
+  "A1B2C3D4E5F6": "Kessi",
+  "F6E5D4C3B2A1": "Tessi"
 }
 ```
 
@@ -750,8 +744,8 @@ Read by `fetch_charging_sessions.py` to assign vehicle names to sessions. Can be
 
 The electricity price is configured in **two stages**:
 
-1. **`wallbox_config.json`** (`price_per_kwh_chf: 0.29`) – read during fetch and embedded in `wallbox_sessions.json`
-2. **`input_number.wallbox_price_per_kwh`** (default: 0.29) – live value for HA template sensors and dashboard
+1. **`wallbox_config.json`** (`price_per_kwh: 0.29`) – read during fetch and embedded in `wallbox_sessions.json`
+2. **`input_number.wallbox_price_per_kwh`** (default: 0.29) and **`input_text.wallbox_currency`** (default: `CHF`) – live values for HA template sensors and dashboard
 
 **Cost calculation**: `energy_kwh × price_per_kwh`
 
@@ -815,7 +809,7 @@ Automation trigger (start or /1h)
     │       └── ['All', 'May 2026', 'April 2026', ...]
     │
     └── input_select.set_options(wallbox_rfid_selector)
-            └── ['Please select...', '04A5F3D2CC1D90 — Kessi', '049D869A5A2294 — Tessi']
+            └── ['Please select...', 'A1B2C3D4E5F6 — Kessi', 'F6E5D4C3B2A1 — Tessi']
 ```
 
 ---
@@ -844,8 +838,8 @@ nano /volume1/docker/homeassistant/wallbox_vehicles.json
 
 # Format:
 {
-  "04A5F3D2CC1D90": "Kessi",
-  "049D869A5A2294": "Tessi",
+  "A1B2C3D4E5F6": "Kessi",
+  "F6E5D4C3B2A1": "Tessi",
   "NEW_RFID_ID": "New Vehicle"
 }
 ```
@@ -902,9 +896,9 @@ Unknown RFIDs appear as `"RFID_CODE — RFID_CODE"` (RFID = name, not yet assign
 
 | Entity | Description |
 |--------|-------------|
-| `sensor.wallbox_total_cost_chf` | Total costs CHF |
+| `sensor.wallbox_kosten_gesamt` | Total costs (currency in attribute `currency`) |
 | `sensor.wallbox_kwh_current_month` | kWh in current month |
-| `sensor.wallbox_cost_current_month_chf` | Costs in current month CHF |
+| `sensor.wallbox_kosten_aktueller_monat` | Costs in current month (currency in attribute `currency`) |
 | `sensor.wallbox_kwh_vehicle1_total` | Vehicle 1 total consumption kWh |
 | `sensor.wallbox_kwh_vehicle2_total` | Vehicle 2 total consumption kWh |
 
@@ -927,7 +921,8 @@ Unknown RFIDs appear as `"RFID_CODE — RFID_CODE"` (RFID = name, not yet assign
 
 | Entity | Description |
 |--------|-------------|
-| `input_number.wallbox_price_per_kwh` | Electricity price CHF/kWh (live, 0.01–2.00) |
+| `input_number.wallbox_price_per_kwh` | Electricity price per kWh (live, 0.01–2.00) |
+| `input_text.wallbox_currency` | Currency code, ISO 4217 (live, default `CHF`) |
 | `input_number.wallbox_hems_current_limit` | HEMS limit setting (0-16A) |
 | `input_number.wallbox_safe_current` | Safe current setting (0-32A) |
 | `input_number.wallbox_comm_timeout` | Comm timeout setting (1-300s) |
@@ -1150,8 +1145,8 @@ ping 10.x.x.x
 
 | RFID | Vehicle |
 |------|---------|
-| `04A5F3D2CC1D90` | Kessi (Tesla) |
-| `049D869A5A2294` | Tessi (Tesla) |
+| `A1B2C3D4E5F6` | Kessi (example) |
+| `F6E5D4C3B2A1` | Tessi (example) |
 
 ---
 

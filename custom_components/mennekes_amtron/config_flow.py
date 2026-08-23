@@ -34,6 +34,8 @@ class InvalidCredentials(Exception):
     """The wallbox rejected the supplied credentials."""
 
 
+# The electricity price is in the Home Assistant currency (Settings → System →
+# General); the integration does not keep a currency of its own.
 STEP_USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_WALLBOX_HOST): str,
@@ -206,12 +208,16 @@ class MennekesAmtronOptionsFlow(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     CONF_PRICE_PER_KWH,
-                    default=self._entry.data.get(CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH),
+                    default=self._current(CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH),
                 ): vol.Coerce(float),
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
-                    default=self._entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                    default=self._current(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=3600)),
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)
+
+    def _current(self, key: str, default: Any) -> Any:
+        """Value currently in effect: options win over the initial setup data."""
+        return self._entry.options.get(key, self._entry.data.get(key, default))

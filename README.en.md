@@ -61,11 +61,11 @@ mode — `0` = off, `1` = read only, `2` = read and write. HEMS limit and safe c
 
 | Field | Meaning | Default |
 |-------|---------|---------|
-| **IP address or hostname** | Address of the wallbox on your network, e.g. `192.168.2.179` or `wallbox.local` | – (required) |
+| **IP address or hostname** | Address of the wallbox on your network, e.g. `192.xxx.xxx.xxx` or `wallbox.local` | – (required) |
 | **API port** | HTTP port used for the REST calls | `80` |
 | **Installer password** | Password of the wallbox installer account | – (required) |
 | **Modbus port** | TCP port of the Modbus protocol | `502` |
-| **Electricity price (CHF/kWh)** | Basis for the cost calculation | `0.29` |
+| **Electricity price (per kWh)** | Basis for the cost calculation, in the Home Assistant currency | `0.29` |
 | **Update interval** | Interval of sensor updates in seconds (1–3600) | `30` |
 
 After **OK** the integration creates one device with around 35 entities. It reads model, firmware
@@ -73,6 +73,9 @@ version and serial number from the wallbox itself — you do not need to select 
 
 Electricity price and interval can be changed at any time via **Configure** on the integration
 entry.
+
+The cost sensors use the Home Assistant currency: **Settings → System → General → Currency**.
+Pick `EUR`, `CHF` etc. there — the integration follows without a restart.
 
 ---
 
