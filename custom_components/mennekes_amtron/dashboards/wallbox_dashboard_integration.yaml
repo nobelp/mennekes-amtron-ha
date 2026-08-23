@@ -136,9 +136,11 @@ views:
     content: '{% set months = state_attr(''sensor.mennekes_amtron_sessions_summary'',''monthly_summary'')
       %}
 
+      {% set cur = state_attr(''sensor.mennekes_amtron_sessions_summary'',''currency'') or '''' %}
+
       {% if months %}
 
-      | Monat | kWh | Kosten |
+      | Monat | kWh | Kosten {{ cur }} |
 
       |---|---:|---:|
 
@@ -157,9 +159,11 @@ views:
     content: '{% set totals = state_attr(''sensor.mennekes_amtron_sessions_summary'',''vehicle_totals'')
       %}
 
+      {% set cur = state_attr(''sensor.mennekes_amtron_sessions_summary'',''currency'') or '''' %}
+
       {% if totals %}
 
-      | Fahrzeug | kWh | Kosten |
+      | Fahrzeug | kWh | Kosten {{ cur }} |
 
       |---|---:|---:|
 
@@ -177,14 +181,16 @@ views:
     title: Letzte Ladevorgänge
     content: '{% set sessions = state_attr(''sensor.mennekes_amtron_sessions_summary'',''sessions'') %}
 
+      {% set cur = state_attr(''sensor.mennekes_amtron_sessions_summary'',''currency'') or '''' %}
+
       {% if sessions %}
 
-      | Start | Fahrzeug | kWh | Kosten |
+      | Start | Fahrzeug | kWh | Kosten {{ cur }} |
 
       |---|---|---:|---:|
 
       {% for s in sessions[:20] %}| {{ s.start[:16] | replace(''T'','' '') }} | {{ s.vehicle }} | {{ ''%.2f''
-      | format(s.energy_kwh) }} | {{ ''%.2f'' | format(s.cost_chf) }} |
+      | format(s.energy_kwh) }} | {{ ''%.2f'' | format(s.cost) }} |
 
       {% endfor %}
 
@@ -250,9 +256,11 @@ views:
 
       {% set totals = state_attr(''sensor.mennekes_amtron_known_vehicles'',''vehicle_totals'') %}
 
+      {% set cur = state_attr(''sensor.mennekes_amtron_known_vehicles'',''currency'') or '''' %}
+
       {% if v %}
 
-      | RFID | Fahrzeug | kWh | Kosten |
+      | RFID | Fahrzeug | kWh | Kosten {{ cur }} |
 
       |---|---|---:|---:|
 

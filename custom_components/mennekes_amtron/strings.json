@@ -7,28 +7,32 @@
         "data": {
           "host": "Wallbox IP Address or Hostname",
           "api_port": "API Port (usually 80)",
-          "password": "Installer Password",
+          "api_password": "Installer Password",
           "modbus_port": "Modbus Port (usually 502)",
-          "electricity_price": "Electricity Price (CHF/kWh)",
+          "price_per_kwh": "Electricity Price (per kWh)",
           "scan_interval": "Update Interval (seconds, 1-3600)"
         },
         "data_description": {
           "host": "e.g., 192.xxx.xxx.xxx or wallbox.local",
           "api_port": "HTTP API port for REST calls",
-          "password": "Installer password for API authentication",
+          "api_password": "Installer password for API authentication",
           "modbus_port": "TCP port for Modbus protocol",
-          "electricity_price": "Used for cost calculations",
+          "price_per_kwh": "Used for cost calculations. Enter it in your Home Assistant currency (Settings → System → General).",
           "scan_interval": "How often to update sensor values"
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to wallbox. Check IP address, port, and network connectivity.",
-      "invalid_auth": "Authentication failed. Check the installer password.",
-      "timeout": "Connection timeout. Wallbox may be unreachable or slow to respond.",
+      "invalid_credentials": "Authentication failed. Check the installer password.",
+      "timeout_connect": "Connection timeout. Wallbox may be unreachable or slow to respond.",
+      "ssl_error": "SSL error while connecting to the wallbox.",
       "invalid_host": "Invalid IP address or hostname format.",
       "invalid_port": "Port must be a number between 1 and 65535.",
-      "unknown": "An unexpected error occurred. Check the logs for details."
+      "unknown_error": "An unexpected error occurred. Check the logs for details."
+    },
+    "abort": {
+      "already_configured": "This wallbox is already configured."
     }
   },
   "options": {
@@ -37,8 +41,12 @@
         "title": "Mennekes AMTRON Options",
         "description": "Update settings for your wallbox integration.",
         "data": {
-          "electricity_price": "Electricity Price (CHF/kWh)",
+          "price_per_kwh": "Electricity Price (per kWh)",
           "scan_interval": "Update Interval (seconds)"
+        },
+        "data_description": {
+          "price_per_kwh": "Used for cost calculations. Enter it in your Home Assistant currency (Settings → System → General).",
+          "scan_interval": "How often to update sensor values"
         }
       }
     }
