@@ -8,7 +8,7 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
-## [2.2.0] – 2026-08-22
+## [2.2.0-beta.1] - 2026-08-23
 
 Die Kostenberechnung folgt der Währung von Home Assistant — die Integration ist nicht mehr auf CHF
 festgelegt.
