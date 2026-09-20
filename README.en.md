@@ -61,7 +61,7 @@ mode — `0` = off, `1` = read only, `2` = read and write. HEMS limit and safe c
 
 | Field | Meaning | Default |
 |-------|---------|---------|
-| **IP address or hostname** | Address of the wallbox on your network, e.g. `192.168.2.179` or `wallbox.local` | – (required) |
+| **IP address or hostname** | Address of the wallbox on your network, e.g. `192.xxx.xxx.xxx` or `wallbox.local` | – (required) |
 | **API port** | HTTP port used for the REST calls | `80` |
 | **Installer password** | Password of the wallbox installer account | – (required) |
 | **Modbus port** | TCP port of the Modbus protocol | `502` |

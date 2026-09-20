@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Weist einem RFID einen Fahrzeugnamen zu.
-Liest: RFID_OPTION (Format: "04A5F3D2CC1D90 — Kessi"), NAME (neuer Name)
+Liest: RFID_OPTION (Format: "A1B2C3D4E5F6 — Kessi"), NAME (neuer Name)
 Schreibt: /config/wallbox_vehicles.json (bestehende Einträge bleiben erhalten)
 """
 import os
@@ -12,7 +12,7 @@ OUTPUT_FILE = "/config/wallbox_vehicles.json"
 rfid_option = os.environ.get("RFID_OPTION", "").strip()
 name = os.environ.get("VEHICLE_NAME", "").strip()
 
-# Parse RFID from option string like "04A5F3D2CC1D90 — Kessi"
+# Parse RFID from option string like "A1B2C3D4E5F6 — Kessi"
 rfid = rfid_option.split(" — ")[0].strip().split(" ")[0].strip()
 
 if not rfid or not name:
