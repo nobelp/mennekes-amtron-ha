@@ -234,6 +234,11 @@ class SessionDataCoordinator(WallboxApiCoordinator):
     def set_price(self, price: float) -> None:
         self._price = price
 
+    @property
+    def currency(self) -> str:
+        """Currency of the costs: the Home Assistant currency (Settings → System → General)."""
+        return self.hass.config.currency
+
     def set_vehicles(self, vehicles: dict[str, str]) -> None:
         self._vehicles = vehicles
 
@@ -242,8 +247,8 @@ class SessionDataCoordinator(WallboxApiCoordinator):
         """RFID → name mapping currently in effect."""
         return self._vehicles
 
-    def reapply_vehicles(self) -> None:
-        """Recompute names and totals from cached data, without calling the API."""
+    def reprocess_cached(self) -> None:
+        """Recompute names, costs and totals from cached data, without calling the API."""
         if self._raw:
             self.async_set_updated_data(self._process(self._raw))
 
@@ -287,7 +292,7 @@ class SessionDataCoordinator(WallboxApiCoordinator):
                 "rfid": rfid,
                 "vehicle": vehicle,
                 "energy_kwh": round(energy, 3),
-                "cost_chf": round(energy * self._price, 2),
+                "cost": round(energy * self._price, 2),
                 "start": s.get("startTime", ""),
                 "end": s.get("stopTime", s.get("endTime", "")),
             })
@@ -300,24 +305,26 @@ class SessionDataCoordinator(WallboxApiCoordinator):
             month = s["start"][:7] if s["start"] else "Unknown"
             monthly.setdefault(month, {"kwh": 0.0, "cost": 0.0, "by_vehicle": {}})
             monthly[month]["kwh"] = round(monthly[month]["kwh"] + s["energy_kwh"], 3)
-            monthly[month]["cost"] = round(monthly[month]["cost"] + s["cost_chf"], 2)
+            monthly[month]["cost"] = round(monthly[month]["cost"] + s["cost"], 2)
             v = s["vehicle"]
             monthly[month]["by_vehicle"].setdefault(v, {"kwh": 0.0, "cost": 0.0})
             monthly[month]["by_vehicle"][v]["kwh"] = round(
                 monthly[month]["by_vehicle"][v]["kwh"] + s["energy_kwh"], 3
             )
             monthly[month]["by_vehicle"][v]["cost"] = round(
-                monthly[month]["by_vehicle"][v]["cost"] + s["cost_chf"], 2
+                monthly[month]["by_vehicle"][v]["cost"] + s["cost"], 2
             )
             vehicle_totals.setdefault(v, {"kwh": 0.0, "cost": 0.0})
             vehicle_totals[v]["kwh"] = round(vehicle_totals[v]["kwh"] + s["energy_kwh"], 3)
-            vehicle_totals[v]["cost"] = round(vehicle_totals[v]["cost"] + s["cost_chf"], 2)
+            vehicle_totals[v]["cost"] = round(vehicle_totals[v]["cost"] + s["cost"], 2)
 
         return {
             "sessions": sessions,
             "total_sessions": len(sessions),
             "total_kwh": round(total_kwh, 3),
             "total_cost": round(total_kwh * self._price, 2),
+            "currency": self.currency,
+            "price_per_kwh": self._price,
             "monthly_summary": [
                 {"month": k, **v} for k, v in sorted(monthly.items(), reverse=True)
             ],

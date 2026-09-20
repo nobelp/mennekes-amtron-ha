@@ -24,3 +24,12 @@ wallbox_comm_timeout:
   step: 1
   mode: slider
   icon: mdi:timer
+
+wallbox_price_per_kwh:
+  name: "Wallbox Strompreis pro kWh"
+  min: 0.01
+  max: 2.00
+  step: 0.01
+  initial: 0.29
+  mode: box
+  icon: mdi:cash

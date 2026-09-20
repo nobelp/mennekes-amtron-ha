@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import Any
+
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, Platform
+from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import (
     DOMAIN,
@@ -47,13 +49,20 @@ async def _fetch_public_info(host: str, api_port: int = DEFAULT_API_PORT) -> dic
     return {}
 
 
+def _setting(entry: ConfigEntry, key: str, default: Any) -> Any:
+    """Return an entry setting, preferring the options over the initial data."""
+    return entry.options.get(key, entry.data.get(key, default))
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_WALLBOX_HOST]
     modbus_port = entry.data.get(CONF_MODBUS_PORT, DEFAULT_MODBUS_PORT)
     api_port = entry.data.get(CONF_API_PORT, DEFAULT_API_PORT)
     api_password = entry.data[CONF_API_PASSWORD]
-    price = entry.data.get(CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH)
-    scan_interval = entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    # Price and interval can be changed later via the options flow, so the
+    # options win over the values entered during the initial setup.
+    price = _setting(entry, CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH)
+    scan_interval = _setting(entry, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     public_info = await _fetch_public_info(host, api_port)
 
@@ -87,6 +96,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    # Costs are reported in the Home Assistant currency. Re-label the cached
+    # history when it changes so the unit follows without a restart.
+    @callback
+    def _core_config_updated(_: Event) -> None:
+        session_coord.reprocess_cached()
+
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, _core_config_updated)
+    )
     return True
 
 
@@ -105,7 +124,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
             entry_data["vehicles"] = vehicles
             session_coord: SessionDataCoordinator = entry_data["sessions"]
             session_coord.set_vehicles(vehicles)
-            session_coord.reapply_vehicles()
+            session_coord.reprocess_cached()
             return
 
     await hass.config_entries.async_reload(entry.entry_id)

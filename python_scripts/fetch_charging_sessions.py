@@ -5,7 +5,10 @@ Speichert JSON nach /config/wallbox_sessions.json.
 
 Passwort via Umgebungsvariable WALLBOX_PASS oder sys.argv[1].
 Fahrzeug-Mapping aus /config/wallbox_vehicles.json (optional).
-Strompreis aus /config/wallbox_config.json (optional, default 0.29 CHF/kWh).
+Strompreis aus /config/wallbox_config.json (optional, default 0.29):
+    {"price_per_kwh": 0.29}
+Der alte Schlüssel "price_per_kwh_chf" wird weiterhin gelesen. Die Währung ist
+nur ein Anzeige-Label und kommt aus input_text.wallbox_currency in Home Assistant.
 """
 
 import sys
@@ -100,7 +103,9 @@ def main():
     try:
         vehicles = load_vehicles()
         config = load_config()
-        price_per_kwh = float(config.get("price_per_kwh_chf", 0.29))
+        price_per_kwh = float(
+            config.get("price_per_kwh", config.get("price_per_kwh_chf", 0.29))
+        )
 
         token = login(password)
         if not token:
@@ -127,7 +132,7 @@ def main():
                 "end": end_ts,
                 "duration": s.get("chargedTime") or s.get("formattedChargedTime"),
                 "energy_kwh": energy_kwh,
-                "cost_chf": round(energy_kwh * price_per_kwh, 2),
+                "cost": round(energy_kwh * price_per_kwh, 2),
                 "start_meter_kwh": round(s.get("startMeterValue") or s.get("startMeter") or 0, 3),
                 "end_meter_kwh": round(s.get("stopMeterValue") or s.get("endMeter") or 0, 3),
                 "vehicle": vehicle,
@@ -159,7 +164,7 @@ def main():
                 "month_label": month_label(month_key),
                 "by_vehicle": {v: round(monthly[month_key].get(v, 0), 3) for v in vehicles_sorted},
                 "total": total_kwh_month,
-                "cost_chf": round(total_kwh_month * price_per_kwh, 2),
+                "cost": round(total_kwh_month * price_per_kwh, 2),
             }
             monthly_summary.append(row)
 
@@ -169,8 +174,8 @@ def main():
         result = {
             "count": len(sessions),
             "total_kwh": total_kwh,
-            "total_cost_chf": round(total_kwh * price_per_kwh, 2),
-            "price_per_kwh_chf": price_per_kwh,
+            "total_cost": round(total_kwh * price_per_kwh, 2),
+            "price_per_kwh": price_per_kwh,
             "last_session_kwh": valid[0]["energy_kwh"] if valid else 0,
             "last_session_start": valid[0]["start"] if valid else None,
             "last_vehicle": valid[0]["vehicle"] if valid else "",

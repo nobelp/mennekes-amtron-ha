@@ -67,7 +67,7 @@ ist `2` erforderlich.
 | **API-Port** | HTTP-Port für die REST-Aufrufe | `80` |
 | **Installer-Passwort** | Passwort des Installer-Zugangs der Wallbox | – (Pflicht) |
 | **Modbus-Port** | TCP-Port des Modbus-Protokolls | `502` |
-| **Strompreis (CHF/kWh)** | Grundlage der Kostenberechnung | `0.29` |
+| **Strompreis (pro kWh)** | Grundlage der Kostenberechnung, in der Währung von Home Assistant | `0.29` |
 | **Aktualisierungsintervall** | Abstand der Sensor-Updates in Sekunden (1–3600) | `30` |
 
 Nach **OK** legt die Integration ein Gerät mit rund 35 Entitäten an. Modell, Firmware-Version und
@@ -75,6 +75,9 @@ Seriennummer liest sie selbst von der Wallbox — das Modell muss nicht ausgewä
 
 Strompreis und Intervall lassen sich später jederzeit über **Konfigurieren** am Integrationseintrag
 ändern.
+
+Die Währung der Kostensensoren ist die von Home Assistant: **Einstellungen → System → Allgemein →
+Währung**. Dort `EUR`, `CHF` usw. wählen — die Integration übernimmt sie ohne Neustart.
 
 ---
 

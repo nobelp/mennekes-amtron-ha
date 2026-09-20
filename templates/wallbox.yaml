@@ -173,14 +173,18 @@
         {{ errors | join(', ') if errors else 'Kein Fehler' }}
       availability: "{{ states('sensor.error_codes_1') not in ['unknown', 'unavailable'] }}"
 
-    - name: "Wallbox Kosten Gesamt CHF"
-      unique_id: wallbox_kosten_gesamt_chf
-      unit_of_measurement: "CHF"
+    # Template sensors cannot template unit_of_measurement, so the currency lives
+    # in input_text.wallbox_currency and is exposed as an attribute here.
+    - name: "Wallbox Kosten Gesamt"
+      unique_id: wallbox_kosten_gesamt
       state_class: total
+      icon: mdi:cash-multiple
       state: >
         {% set total_kwh = state_attr('sensor.wallbox_sessions', 'total_kwh') | float(0) %}
         {% set price = states('input_number.wallbox_price_per_kwh') | float(0.29) %}
         {{ (total_kwh * price) | round(2) }}
+      attributes:
+        currency: "{{ states('input_text.wallbox_currency') }}"
       availability: "{{ states('sensor.wallbox_sessions') not in ['unknown', 'unavailable'] }}"
 
     - name: "Wallbox kWh Kessi Gesamt"
@@ -220,10 +224,10 @@
         {% else %}0{% endif %}
       availability: "{{ states('sensor.wallbox_sessions') not in ['unknown', 'unavailable'] }}"
 
-    - name: "Wallbox Kosten Aktueller Monat CHF"
-      unique_id: wallbox_kosten_aktueller_monat_chf
-      unit_of_measurement: "CHF"
+    - name: "Wallbox Kosten Aktueller Monat"
+      unique_id: wallbox_kosten_aktueller_monat
       state_class: total
+      icon: mdi:cash
       state: >
         {% set monthly = state_attr('sensor.wallbox_sessions', 'monthly_summary') %}
         {% set current = now().strftime('%Y-%m') %}
@@ -232,6 +236,8 @@
           {% set m = monthly | selectattr('month', 'eq', current) | list %}
           {{ (m[0].total * price) | round(2) if m else 0 }}
         {% else %}0{% endif %}
+      attributes:
+        currency: "{{ states('input_text.wallbox_currency') }}"
       availability: "{{ states('sensor.wallbox_sessions') not in ['unknown', 'unavailable'] }}"
 
     - name: "Wallbox Chargepoint Model"
