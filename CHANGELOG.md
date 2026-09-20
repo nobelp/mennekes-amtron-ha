@@ -8,7 +8,11 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
-## [2.2.0-beta.1] - 2026-08-23
+## [2.2.0] - 2026-09-20
+
+Stabile Version mit den Änderungen aus [PR #3](https://github.com/nobelp/mennekes-amtron-ha/pull/3) und [PR #4](https://github.com/nobelp/mennekes-amtron-ha/pull/4): Währungsunterstützung, Fehlerkorrekturen und bereinigte Dokumentationsbeispiele.
+
+*Stable release including [PR #3](https://github.com/nobelp/mennekes-amtron-ha/pull/3) and [PR #4](https://github.com/nobelp/mennekes-amtron-ha/pull/4): currency support, fixes and cleaned-up documentation examples.*
 
 Die Kostenberechnung folgt der Währung von Home Assistant — die Integration ist nicht mehr auf CHF
 festgelegt.
