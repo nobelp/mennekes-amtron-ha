@@ -8,6 +8,19 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.2.1] - 2026-10-04
+
+Die Dashboard-Ansichten **History** und **Systemereignisse** sind jetzt responsive
+([#5](https://github.com/nobelp/mennekes-amtron-ha/issues/5)).
+
+*The **History** and **System events** dashboard views are now responsive.*
+
+### Geändert / Changed
+
+- Bis einschliesslich 600 px Viewport-Breite (Handy) stehen alle Karten in voller Breite untereinander; ab 601 px gilt die breite PC-Ansicht. Umgesetzt mit zwei nativen `conditional`-Karten (`screen`-Bedingung) in `wallbox_dashboard.yaml`; Entitäten, Templates und Filter sind unverändert. *Up to 600 px viewport width (phone) all cards are stacked at full width; from 601 px the wide desktop layout applies. Implemented with two native `conditional` cards (`screen` condition) in `wallbox_dashboard.yaml`; entities, templates and filters are unchanged.*
+
+---
+
 ## [2.2.0] - 2026-09-20
 
 Stabile Version mit den Änderungen aus [PR #3](https://github.com/nobelp/mennekes-amtron-ha/pull/3) und [PR #4](https://github.com/nobelp/mennekes-amtron-ha/pull/4): Währungsunterstützung, Fehlerkorrekturen und bereinigte Dokumentationsbeispiele.
