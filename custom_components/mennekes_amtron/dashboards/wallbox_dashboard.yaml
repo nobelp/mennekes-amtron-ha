@@ -153,6 +153,27 @@ views:
       name: Angewandter Strom L2
     - entity: sensor.dlm_overall_current_applied_l3
       name: Angewandter Strom L3
+  badges:
+  - type: entity
+    show_name: false
+    show_state: true
+    show_icon: true
+    entity: sensor.kessi_battery
+  - type: entity
+    show_name: false
+    show_state: true
+    show_icon: true
+    entity: sensor.kessi_time_charge_complete
+  - type: entity
+    show_name: false
+    show_state: true
+    show_icon: true
+    entity: sensor.tessi_battery
+  - type: entity
+    show_name: false
+    show_state: true
+    show_icon: true
+    entity: sensor.tessi_time_charge_complete
 - title: History
   path: wallbox-history
   icon: mdi:history
@@ -559,9 +580,7 @@ views:
     icon: mdi:cog
     entities:
     - entity: input_number.wallbox_price_per_kwh
-      name: Preis / kWh
-    - entity: input_text.wallbox_currency
-      name: Währung (ISO-Code)
+      name: Preis / kWh (CHF)
     - entity: input_number.wallbox_hems_current_limit
       name: HEMS Limit setzen
     - entity: input_number.wallbox_safe_current
