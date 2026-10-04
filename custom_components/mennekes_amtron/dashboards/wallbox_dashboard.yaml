@@ -178,7 +178,7 @@ views:
             name: Ladevorgänge
           - entity: sensor.wallbox_total_energy_kwh
             name: Gesamtenergie
-          - entity: sensor.wallbox_kosten_gesamt
+          - entity: sensor.wallbox_kosten_gesamt_chf
             name: Gesamtkosten
           - entity: sensor.wallbox_kwh_kessi_gesamt
             name: Kessi gesamt
@@ -186,7 +186,7 @@ views:
             name: Tessi gesamt
           - entity: sensor.wallbox_kwh_aktueller_monat
             name: kWh akt. Monat
-          - entity: sensor.wallbox_kosten_aktueller_monat
+          - entity: sensor.wallbox_kosten_aktueller_monat_chf
             name: Kosten akt. Monat
           - entity: input_select.wallbox_month_filter
             name: Monatsfilter
@@ -245,7 +245,7 @@ views:
               position: top
         - &history_monthly_table
           type: markdown
-          title: Monatstabelle (kWh & Kosten)
+          title: Monatstabelle (kWh & CHF)
           grid_options:
             columns: 3
             rows: auto
@@ -255,16 +255,14 @@ views:
 
             {% set price = states(''input_number.wallbox_price_per_kwh'') | float(0.29) %}
 
-            {% set cur = states(''input_text.wallbox_currency'') %}
-
             {% set v0 = vehicles[0] if vehicles and vehicles | length > 0 else '''' %}
 
             {% set v1 = vehicles[1] if vehicles and vehicles | length > 1 else '''' %}
 
             {% if monthly and monthly | length > 0 %}
 
-            | Monat | {% if v0 %}{{ v0 }} kWh | {{ cur }} | {% endif %}{% if v1 %}{{ v1 }} kWh | {{ cur }} | {% endif
-            %}Gesamt kWh | {{ cur }} |
+            | Monat | {% if v0 %}{{ v0 }} kWh | CHF | {% endif %}{% if v1 %}{{ v1 }} kWh | CHF | {% endif
+            %}Gesamt kWh | CHF |
 
             |-------|{% if v0 %}----------|------|{% endif %}{% if v1 %}----------|------|{% endif %}-----------|------|
 
@@ -298,8 +296,6 @@ views:
 
             {% set price = states(''input_number.wallbox_price_per_kwh'') | float(0.29) %}
 
-            {% set cur = states(''input_text.wallbox_currency'') %}
-
             {% set filter_raw = states(''input_select.wallbox_month_filter'') %}
 
             {% set filter = ''Alle'' if filter_raw in [''unknown'', ''unavailable'', ''''] else filter_raw
@@ -319,14 +315,14 @@ views:
             **{{ filter }}** — {{ ns.filtered | length }} Ladevorgänge
 
 
-            | Datum | Fahrzeug | Dauer | Geladen | Kosten {{ cur }} |
+            | Datum | Fahrzeug | Dauer | Geladen | Kosten |
 
             |-------|----------|-------|---------|--------|
 
             {% for s in ns.filtered %}{% set dt = (s.start | replace(''Z'', ''+00:00'') | as_datetime | as_local)
             if s.start else none %}{% set dts = dt.strftime(''%d.%m.%Y %H:%M'') if dt else ''—'' %}| {{ dts
             }} | **{{ s.vehicle }}** | {{ s.duration or ''—'' }} | **{{ s.energy_kwh }} kWh** | **{{ (s.energy_kwh
-            * price) | round(2) }} {{ cur }}** |
+            * price) | round(2) }} CHF** |
 
             {% endfor %}
 
@@ -336,29 +332,29 @@ views:
 
             {% if filter == ''Alle'' %}
 
-            | Fahrzeug | Gesamt kWh | Gesamt {{ cur }} |
+            | Fahrzeug | Gesamt kWh | Gesamt CHF |
 
             |----------|-----------|-----------|
 
             {% for v in vehicles %}| **{{ v }}** | {{ vtotals.get(v, 0) | round(2) }} kWh | {{ (vtotals.get(v,
-            0) * price) | round(2) }} {{ cur }} |
+            0) * price) | round(2) }} CHF |
 
             {% endfor %}| **Gesamt** | **{{ total | round(2) }} kWh** | **{{ (total * price) | round(2) }}
-            {{ cur }}** |
+            CHF** |
 
             {% else %}
 
             {% for m in monthly %}{% if m.month_label == filter %}
 
-            | Fahrzeug | kWh | {{ cur }} |
+            | Fahrzeug | kWh | CHF |
 
             |----------|-----|-----|
 
             {% for v in vehicles %}| **{{ v }}** | {{ m.by_vehicle.get(v, 0) | round(2) }} kWh | {{ (m.by_vehicle.get(v,
-            0) * price) | round(2) }} {{ cur }} |
+            0) * price) | round(2) }} CHF |
 
             {% endfor %}| **Gesamt** | **{{ m.total | round(2) }} kWh** | **{{ (m.total * price) | round(2)
-            }} {{ cur }}** |
+            }} CHF** |
 
             {% endif %}{% endfor %}
 
