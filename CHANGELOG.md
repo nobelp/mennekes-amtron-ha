@@ -8,6 +8,29 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.3.0-beta.1] - 2026-10-19
+
+Beta-Version: Das Installer-Passwort wird beim Einrichten geprüft, und bei geändertem Passwort fragt die Integration neu an. Außerdem Korrekturen aus dem HACS-Review. Bitte testen und Rückmeldung im Issue-Tracker geben.
+
+*Beta version: the installer password is now checked during setup, and the integration asks for it again when it has changed. Also fixes from the HACS review. Please test and report back in the issue tracker.*
+
+### Hinzugefügt / Added
+
+- Neuanmeldung: Lehnt die Wallbox das Installer-Passwort ab, fordert Home Assistant zur Eingabe des aktuellen Passworts auf. *Reauthentication: when the wallbox rejects the installer password, Home Assistant asks for the current one.*
+- `max_current_ev` wird jetzt aus Register 715 gelesen. *`max_current_ev` is now read from register 715.*
+
+### Geändert / Changed
+
+- Der Schalter „CP Availability“ ist entfernt, da Register 124 in Protokollversion 1.5 nur lesbar ist. Sein Registereintrag wird beim Update automatisch bereinigt. *The "CP Availability" switch is removed because register 124 is read-only in protocol version 1.5. Its registry entry is cleaned up automatically on update.*
+- `total_kwh` und `total_sessions` nutzen `state_class: total` statt `total_increasing`, weil die Werte aus den letzten Sessions berechnet werden und sinken können. *`total_kwh` and `total_sessions` use `state_class: total` instead of `total_increasing`, because they are computed from the most recent sessions and can decrease.*
+
+### Behoben / Fixed
+
+- Das Einrichten prüft jetzt das Installer-Passwort. Vorher wurde nur der unauthentifizierte Endpunkt `PublicInfo` abgefragt, sodass ein falsches Passwort akzeptiert wurde. *Setup now verifies the installer password. Previously only the unauthenticated `PublicInfo` endpoint was queried, so a wrong password was accepted.*
+- Schlägt die Anmeldung beim Start fehl, wird das nicht mehr stillschweigend ignoriert; Fehler beim Laden der Session- und Ereignisdaten werden protokolliert. *A failed login at startup is no longer ignored silently; errors while loading session and event data are logged.*
+
+---
+
 ## [2.2.0] - 2026-09-20
 
 Stabile Version mit den Änderungen aus [PR #3](https://github.com/nobelp/mennekes-amtron-ha/pull/3) und [PR #4](https://github.com/nobelp/mennekes-amtron-ha/pull/4): Währungsunterstützung, Fehlerkorrekturen und bereinigte Dokumentationsbeispiele.
