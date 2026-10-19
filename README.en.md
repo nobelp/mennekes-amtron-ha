@@ -182,9 +182,6 @@ connections — the wallbox keeps serving normally in that state. The value can 
 survives a reboot; it then points at a stuck firmware update and is a case for the manufacturer's
 support.
 
-**The availability switch does nothing** — register 124 is read-only in protocol version 1.5
-according to the manufacturer documentation.
-
 Further cases and the complete register reference are in the
 [manual installation](INSTALLATION_MANUAL.md).
 

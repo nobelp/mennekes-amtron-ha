@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Mapping
 from typing import Any
 
 import aiohttp
@@ -11,6 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     DOMAIN,
@@ -26,12 +28,9 @@ from .const import (
     DEFAULT_PRICE_PER_KWH,
     DEFAULT_API_TIMEOUT,
 )
+from .coordinator import InvalidCredentials, authenticate_installer
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class InvalidCredentials(Exception):
-    """The wallbox rejected the supplied credentials."""
 
 
 # The electricity price is in the Home Assistant currency (Settings → System →
@@ -74,11 +73,9 @@ class MennekesAmtronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 # Validate connection to wallbox via API
                 try:
-                    validation_result = await self._validate_wallbox(
+                    await self._validate_wallbox(
                         host, api_port, user_input[CONF_API_PASSWORD]
                     )
-                    if not validation_result:
-                        errors["base"] = "cannot_connect"
                 except asyncio.TimeoutError:
                     _LOGGER.warning(
                         "Timeout connecting to wallbox at %s:%d", host, api_port
@@ -89,6 +86,9 @@ class MennekesAmtronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "ssl_error"
                 except aiohttp.ClientConnectorError:
                     _LOGGER.warning("Connection error to wallbox at %s:%d", host, api_port)
+                    errors["base"] = "cannot_connect"
+                except (aiohttp.ClientResponseError, UpdateFailed):
+                    _LOGGER.warning("Unexpected answer from wallbox at %s:%d", host, api_port)
                     errors["base"] = "cannot_connect"
                 except InvalidCredentials:
                     _LOGGER.warning("Invalid credentials for wallbox")
@@ -119,61 +119,51 @@ class MennekesAmtronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _validate_wallbox(
-        self, host: str, port: int, password: str
-    ) -> bool:
-        """Validate connection to wallbox by fetching public info."""
+    async def _validate_wallbox(self, host: str, port: int, password: str) -> None:
+        """Check that the wallbox is reachable and accepts the installer password.
+
+        Raises InvalidCredentials if the wallbox rejects the password.
+        """
         timeout = aiohttp.ClientTimeout(total=DEFAULT_API_TIMEOUT)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            await authenticate_installer(session, f"http://{host}:{port}/api/v1", password)
+        _LOGGER.debug("Successfully validated wallbox at %s:%d", host, port)
 
-        try:
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                url = f"http://{host}:{port}/api/v1/PublicInfo"
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        # Check that we got valid response with expected fields
-                        if isinstance(data, dict):
-                            _LOGGER.debug(
-                                "Successfully validated wallbox at %s:%d", host, port
-                            )
-                            return True
-                    elif response.status in (401, 403):
-                        raise InvalidCredentials(
-                            f"Wallbox rejected the request with HTTP {response.status}"
-                        )
-                    else:
-                        _LOGGER.warning(
-                            "Wallbox returned status %d for %s:%d",
-                            response.status,
-                            host,
-                            port,
-                        )
-                        return False
-        except asyncio.TimeoutError:
-            _LOGGER.warning(
-                "Timeout connecting to wallbox at %s:%d after %d seconds",
-                host,
-                port,
-                DEFAULT_API_TIMEOUT,
-            )
-            raise
-        except aiohttp.ClientSSLError as err:
-            _LOGGER.error("SSL error connecting to %s:%d: %s", host, port, err)
-            raise
-        except aiohttp.ClientConnectorError as err:
-            _LOGGER.warning("Connection error to %s:%d: %s", host, port, err)
-            raise
-        except InvalidCredentials as err:
-            _LOGGER.warning("Authentication error for %s:%d: %s", host, port, err)
-            raise
-        except aiohttp.ClientError as err:
-            _LOGGER.error("HTTP error connecting to %s:%d: %s", host, port, err)
-            raise
-        except ValueError as err:
-            _LOGGER.error("Invalid JSON response from %s:%d: %s", host, port, err)
-            return False
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Start re-authentication after the wallbox rejected the stored password."""
+        return await self.async_step_reauth_confirm()
 
-        return False
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Ask for the installer password again and store it once it is accepted."""
+        entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                await self._validate_wallbox(
+                    entry.data[CONF_WALLBOX_HOST],
+                    entry.data[CONF_API_PORT],
+                    user_input[CONF_API_PASSWORD],
+                )
+            except InvalidCredentials:
+                errors["base"] = "invalid_credentials"
+            except (asyncio.TimeoutError, aiohttp.ClientError, UpdateFailed):
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_API_PASSWORD: user_input[CONF_API_PASSWORD]},
+                    reason="reauth_successful",
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_API_PASSWORD): str}),
+            description_placeholders={"host": entry.data[CONF_WALLBOX_HOST]},
+            errors=errors,
+        )
 
     @staticmethod
     @callback
