@@ -11,7 +11,7 @@ Complete integration of a Mennekes AMTRON wallbox into Home Assistant. Supports 
 same Modbus TCP register set (see [Supported models](#supported-models)):
 - **Real-time monitoring** via Modbus TCP (voltage, current, power, charging status)
 - **Charging sessions** via REST API (session history, vehicle assignment, costs)
-- **Control** of HEMS limit, safe current, availability, charging pause
+- **Control** of HEMS limit, safe current, charging pause
 - **Dashboard** with ApexCharts bar chart, monthly table, session list
 
 ---
@@ -477,15 +477,13 @@ No preparation needed — every card reads entities of the integration. What the
 | **Overview** | Status, current or last charging session, energy, power, voltage & current, read-only limits | Modbus registers, every 30 s |
 | **History** | Totals plus monthly, per-vehicle and session tables | the `monthly_summary`, `vehicle_totals` and `sessions` attributes of `sensor.mennekes_amtron_sessions_summary` (REST API, hourly) |
 | **System events** | A note on how to activate the tab with the optional sensors from [`SYSTEMLOGS_SETUP.md`](SYSTEMLOGS_SETUP.md) | – |
-| **Configuration** | HEMS limit, safe current, communication timeout, charging pause, availability | the integration's `number.*` and `switch.*` entities |
+| **Configuration** | HEMS limit, safe current, communication timeout, charging pause | the integration's `number.*` and `switch.*` entities |
 
 With this variant the electricity price and the update interval are not maintained through helpers
 but via **Settings → Devices & Services → Mennekes AMTRON → Configure**.
 
-Two limitations of the integration affect the cards: the **availability** switch writes to register
-124, which is documented as read-only (see [Known Limitations](#known-limitations)), and the
-integration does not provide **Dynamic Load Management** — those cards exist only in the full
-version.
+One limitation of the integration affects the cards: it does not provide **Dynamic Load
+Management** — those cards exist only in the full version.
 
 ##### Variant `wallbox_dashboard.yaml` (full version)
 
@@ -1245,13 +1243,14 @@ Home Assistant has to be restarted, because the storage file is only read at sta
 ### Known Limitations
 1. **Modbus registers**: Based on protocol version 1.5 – newer versions may have different registers
 2. **Write access**: Requires Modbus TCP in read-and-write mode (register 2010 = `2`).
-   Register 124 (charge point availability) is documented as read-only — the availability
-   switch cannot write to it.
+   Register 124 (charge point availability) is documented as read-only and is not written by the
+   integration.
 3. **A single Modbus client**: the wallbox serves exactly one Modbus TCP connection. Every
    further client is disconnected right after the TCP handshake. `systemStatus: UpdateInProgress`
    in the wallbox API is **not** the cause — it keeps serving normally in that state, and the
    value can persist and survive a reboot.
-4. **REST API**: Requires installer password (not user password)
+4. **REST API**: Requires installer password (not user password). The password is checked during
+   setup; if it changes on the wallbox, Home Assistant asks you to sign in again (see Troubleshooting).
 5. **Dashboard**: Requires `apexcharts-card` from HACS
 
 ### Troubleshooting
@@ -1259,6 +1258,9 @@ Home Assistant has to be restarted, because the storage file is only read at sta
 Before requesting support, please check:
 1. **View logs**: Settings → System → Logs (search for "wallbox")
 2. **Read the [quick start](README.en.md) and this page** (comprehensive troubleshooting guides available)
+3. **Re-authentication**: If Home Assistant asks you to sign in again, enter the current installer
+   password of the wallbox. On "Authentication failed", check the password; avoid several failed
+   attempts in a row.
 
 ---
 

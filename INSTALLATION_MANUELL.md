@@ -11,7 +11,7 @@ gesamte Portfolio **AMTRON 4You 400/500** und **AMTRON 4Business 600/700** — a
 Baureihen nutzen denselben Modbus-TCP-Registersatz (siehe [Unterstützte Modelle](#unterstützte-modelle)):
 - **Echtzeit-Monitoring** via Modbus TCP (Spannung, Strom, Leistung, Ladestatus)
 - **Ladevorgänge** via REST API (Sessionshistorie, Fahrzeugzuordnung, Kosten)
-- **Steuerung** von HEMS-Limit, Safe Current, Verfügbarkeit, Ladeunterbrechung
+- **Steuerung** von HEMS-Limit, Safe Current, Ladeunterbrechung
 - **Dashboard** mit ApexCharts-Balkendiagramm, Monatstabelle, Ladevorgänge-Liste
 
 ---
@@ -483,15 +483,13 @@ Reiter zeigen:
 | **Übersicht** | Status, aktuelle bzw. letzte Ladesession, Energie, Leistung, Spannung & Strom, gelesene Limits | Modbus-Register, alle 30 s |
 | **History** | Summen sowie Monats-, Fahrzeug- und Sessiontabelle | Attribute `monthly_summary`, `vehicle_totals` und `sessions` von `sensor.mennekes_amtron_sessions_summary` (REST-API, stündlich) |
 | **Systemereignisse** | Hinweis, wie sich der Reiter mit den optionalen Sensoren aus [`SYSTEMLOGS_SETUP.md`](SYSTEMLOGS_SETUP.md) aktivieren lässt | – |
-| **Konfiguration** | HEMS-Limit, Safe Current, Kommunikations-Timeout, Ladepause, Verfügbarkeit | `number.*` und `switch.*` der Integration |
+| **Konfiguration** | HEMS-Limit, Safe Current, Kommunikations-Timeout, Ladepause | `number.*` und `switch.*` der Integration |
 
 Strompreis und Aktualisierungsintervall werden bei dieser Variante nicht über Helfer gepflegt,
 sondern über **Einstellungen → Geräte & Dienste → Mennekes AMTRON → Konfigurieren**.
 
-Zwei Einschränkungen der Integration wirken sich auf die Karten aus: der Schalter
-**Verfügbarkeit** schreibt auf Register 124, das laut Dokumentation nur lesbar ist (siehe
-[Bekannte Limitierungen](#known-limitations)), und **Dynamic Load Management** liefert die
-Integration nicht — diese Karten gibt es nur in der Vollversion.
+Eine Einschränkung der Integration wirkt sich auf die Karten aus: **Dynamic Load Management**
+liefert die Integration nicht — diese Karten gibt es nur in der Vollversion.
 
 ##### Variante `wallbox_dashboard.yaml` (Vollversion)
 
@@ -1250,13 +1248,15 @@ muss Home Assistant neu gestartet werden, weil die Storage-Datei nur beim Start 
 ### Known Limitations
 1. **Modbus Register**: Basierend auf Protokollversion 1.5 – neuere Versionen können andere Register haben
 2. **Schreibzugriff**: Erfordert Modbus TCP im Read-and-Write-Modus (Register 2010 = `2`).
-   Register 124 (Charge Point Availability) ist laut Dokumentation nur lesbar — der
-   Verfügbarkeits-Schalter kann darauf nicht schreiben.
+   Register 124 (Charge Point Availability) ist laut Dokumentation nur lesbar und wird von der
+   Integration nicht beschrieben.
 3. **Nur ein Modbus-Client**: Die Wallbox bedient genau eine Modbus-TCP-Verbindung. Jeder
    weitere Client wird nach dem TCP-Handshake sofort getrennt. `systemStatus: UpdateInProgress`
    in der Wallbox-API ist dafür **nicht** die Ursache — in diesem Zustand liefert sie normal
    weiter; der Wert kann dauerhaft anstehen und übersteht einen Neustart.
-4. **REST API**: Benötigt Installer-Passwort (nicht User-Passwort)
+4. **REST API**: Benötigt Installer-Passwort (nicht User-Passwort). Das Passwort wird beim
+   Einrichten geprüft; ändert sich das Passwort in der Wallbox, fordert Home Assistant zur
+   Neuanmeldung auf (siehe Fehlerbehebung).
 5. **Dashboard**: Benötigt `apexcharts-card` vom HACS
 
 ### Troubleshooting
@@ -1264,6 +1264,9 @@ muss Home Assistant neu gestartet werden, weil die Storage-Datei nur beim Start 
 Vor dem Support bitte prüfen:
 1. **Logs anschauen**: Settings → System → Logs (suche nach "wallbox")
 2. **[Schnellstart](README.md) und diese Seite lesen** (umfangreiche Lösungsanleitungen vorhanden)
+3. **Neuanmeldung**: Fordert Home Assistant zur erneuten Anmeldung auf, das Installer-Passwort der
+   Wallbox neu eingeben. Bei „Authentifizierung fehlgeschlagen“ das Passwort prüfen; mehrere
+   Fehlversuche kurz hintereinander vermeiden.
 
 ---
 

@@ -20,7 +20,7 @@ Funktionen:
 - **Ladehistorie** via REST API: Sessions, Kosten — Abruf auf Knopfdruck
 - **Systemereignisse** der Wallbox mit Filter nach Level, Event-ID und Freitext
 - **Fahrzeugzuordnung** per RFID direkt in der Integration, ohne Scripts oder Dateien
-- **Steuerung**: HEMS-Limit, Safe Current, Ladepause, Verfügbarkeit
+- **Steuerung**: HEMS-Limit, Safe Current, Ladepause
 - **Dashboard** mit vier Reitern, wird mitgeliefert
 
 > Diese Seite beschreibt den **automatisierten Weg**: HACS, Konfigurationsdialog, Dashboard
@@ -130,7 +130,7 @@ erscheinen keine Karten mit «Entität nicht gefunden». Ein Neustart ist nicht 
 | Übersicht | `/dashboard-wallbox/wallbox-main` | Status, aktuelle bzw. letzte Ladesession, Energie, Leistung, Spannung & Strom, gelesene Limits |
 | History | `/dashboard-wallbox/wallbox-history` | Summen, Monatstabelle, Verbrauch je Fahrzeug, letzte Ladevorgänge, Abruf-Button |
 | Systemereignisse | `/dashboard-wallbox/wallbox-systemlogs` | Ereignisliste der Wallbox mit Filter nach Level, Event-ID und Freitext |
-| Konfiguration | `/dashboard-wallbox/wallbox-config` | RFID-Zuordnung, bekannte Fahrzeuge, HEMS-Limit, Safe Current, Timeout, Ladepause, Verfügbarkeit |
+| Konfiguration | `/dashboard-wallbox/wallbox-config` | RFID-Zuordnung, bekannte Fahrzeuge, HEMS-Limit, Safe Current, Timeout, Ladepause |
 
 Die zweite mitgelieferte Datei `wallbox_dashboard.yaml` ist die **Vollversion** mit
 Systemereignis-Filter, DLM-Karten und Fahrzeugzuordnung. Sie setzt die

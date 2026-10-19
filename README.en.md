@@ -20,7 +20,7 @@ Features:
 - **Charging history** via REST API: sessions, costs — fetched on button press
 - **System events** of the wallbox, filtered by level, event ID and free text
 - **Vehicle mapping** by RFID inside the integration, no scripts or files
-- **Control**: HEMS limit, safe current, charging pause, availability
+- **Control**: HEMS limit, safe current, charging pause
 - **Dashboard** with four tabs, shipped with the integration
 
 > This page describes the **automated path**: HACS, configuration dialog, paste the dashboard —
@@ -127,7 +127,7 @@ No restart required.
 | Overview | `/dashboard-wallbox/wallbox-main` | Status, current or last charging session, energy, power, voltage & current, read-only limits |
 | History | `/dashboard-wallbox/wallbox-history` | Totals, monthly table, consumption per vehicle, recent sessions, refresh button |
 | System events | `/dashboard-wallbox/wallbox-systemlogs` | Wallbox event list filtered by level, event ID and free text |
-| Configuration | `/dashboard-wallbox/wallbox-config` | RFID mapping, known vehicles, HEMS limit, safe current, timeout, charging pause, availability |
+| Configuration | `/dashboard-wallbox/wallbox-config` | RFID mapping, known vehicles, HEMS limit, safe current, timeout, charging pause |
 
 The second shipped file, `wallbox_dashboard.yaml`, is the **full version** with system-event
 filters, DLM cards and vehicle mapping. It requires the
