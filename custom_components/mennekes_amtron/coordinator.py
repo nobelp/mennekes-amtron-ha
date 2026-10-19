@@ -6,6 +6,7 @@ from typing import Any
 
 import aiohttp
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -17,6 +18,7 @@ from .const import (
     REG_CP_STATUS,
     REG_ENERGY_L1,
     REG_HEMS_CURRENT_LIMIT,
+    REG_MAX_CURRENT_EV,
     REG_PHASE_SWITCH_MODE,
     REG_SAFE_CURRENT,
     REG_SESSION_ENERGY,
@@ -25,6 +27,37 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class InvalidCredentials(Exception):
+    """The wallbox rejected the installer password."""
+
+
+async def authenticate_installer(
+    session: aiohttp.ClientSession, base_url: str, password: str
+) -> str:
+    """Fetch a single-use nonce and exchange the installer password for a token.
+
+    Used by the config flow (to validate the password) and by the REST coordinators.
+    Raises InvalidCredentials if the wallbox rejects the password.
+    """
+    async with session.get(f"{base_url}/Nonce") as r:
+        r.raise_for_status()
+        nonce = (await r.text()).strip().strip('"')
+
+    async with session.post(
+        f"{base_url}/AuthManagement/login",
+        headers={"X-Nonce": nonce, "Content-Type": "application/json"},
+        json={"username": "Installer", "password": password},
+    ) as r:
+        if r.status in (401, 403):
+            raise InvalidCredentials(f"Wallbox rejected the login with HTTP {r.status}")
+        r.raise_for_status()
+        payload = await r.json()
+        token = payload.get("token") or payload.get("access_token", "")
+        if not token:
+            raise UpdateFailed("Authentication returned no token")
+        return token
 
 
 def _to_uint32(high: int, low: int) -> int:
@@ -139,6 +172,11 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             if not r.isError():
                 data["signaled_current"] = r.registers[0]
 
+            # Max current EV: 715 (1 register)
+            r = await client.read_holding_registers(REG_MAX_CURRENT_EV, count=1, device_id=MODBUS_SLAVE_ID)
+            if not r.isError():
+                data["max_current_ev"] = r.registers[0]
+
             # Session data: 716-719 (2 x uint32)
             r = await client.read_holding_registers(REG_SESSION_ENERGY, count=4, device_id=MODBUS_SLAVE_ID)
             if not r.isError() and len(r.registers) >= 4:
@@ -202,24 +240,6 @@ class WallboxApiCoordinator(DataUpdateCoordinator):
         self._password = password
         self._base_url = f"http://{host}:{api_port}/api/v1"
 
-    async def _authenticate(self, session: aiohttp.ClientSession) -> str:
-        """Fetch a single-use nonce and exchange the installer password for a token."""
-        async with session.get(f"{self._base_url}/Nonce") as r:
-            r.raise_for_status()
-            nonce = (await r.text()).strip().strip('"')
-
-        async with session.post(
-            f"{self._base_url}/AuthManagement/login",
-            headers={"X-Nonce": nonce, "Content-Type": "application/json"},
-            json={"username": "Installer", "password": self._password},
-        ) as r:
-            r.raise_for_status()
-            payload = await r.json()
-            token = payload.get("token") or payload.get("access_token", "")
-            if not token:
-                raise UpdateFailed("Authentication returned no token")
-            return token
-
 
 class SessionDataCoordinator(WallboxApiCoordinator):
     def __init__(
@@ -257,9 +277,11 @@ class SessionDataCoordinator(WallboxApiCoordinator):
             async with aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=30)
             ) as session:
-                token = await self._authenticate(session)
+                token = await authenticate_installer(session, self._base_url, self._password)
                 self._raw = await self._fetch_sessions(session, token)
                 return self._process(self._raw)
+        except InvalidCredentials as err:
+            raise ConfigEntryAuthFailed("Installer password was rejected") from err
         except UpdateFailed:
             raise
         except Exception as err:
@@ -352,8 +374,10 @@ class SystemEventsCoordinator(WallboxApiCoordinator):
             async with aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=60)
             ) as session:
-                token = await self._authenticate(session)
+                token = await authenticate_installer(session, self._base_url, self._password)
                 return await self._fetch_events(session, token)
+        except InvalidCredentials as err:
+            raise ConfigEntryAuthFailed("Installer password was rejected") from err
         except UpdateFailed:
             raise
         except Exception as err:

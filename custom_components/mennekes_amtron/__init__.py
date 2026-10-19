@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, Platform
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import (
     DOMAIN,
@@ -26,6 +28,8 @@ from .coordinator import (
     SessionDataCoordinator,
     SystemEventsCoordinator,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.SENSOR,
@@ -76,12 +80,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await modbus_coord.async_config_entry_first_refresh()
 
     # Both REST data sets are non-critical and refresh on demand afterwards –
-    # never block setup on API failures.
+    # never block setup on API failures. A rejected password is the exception:
+    # it must reach Home Assistant so the user is asked to re-enter it.
     for coordinator in (session_coord, events_coord):
         try:
             await coordinator.async_config_entry_first_refresh()
-        except Exception:  # setup must survive any API problem
-            pass
+        except ConfigEntryAuthFailed:
+            raise
+        except Exception:  # setup must survive any other API problem
+            _LOGGER.warning("%s could not be loaded during setup", coordinator.name, exc_info=True)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "modbus": modbus_coord,

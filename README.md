@@ -185,9 +185,6 @@ Modbus-Verbindungen — die Wallbox bedient in diesem Zustand normal weiter. Der
 anstehen und übersteht auch einen Neustart; er deutet dann auf ein hängendes Firmware-Update hin und
 ist ein Fall für den Hersteller-Support.
 
-**Der Verfügbarkeits-Schalter reagiert nicht** — Register 124 ist in Protokollversion 1.5 laut
-Herstellerdokumentation nur lesbar.
-
 Weitere Fälle und die vollständige Registerreferenz stehen in der
 [manuellen Installation](INSTALLATION_MANUELL.md).
 

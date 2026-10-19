@@ -23,8 +23,6 @@ views:
       name: Fahrzeugzustand
     - entity: sensor.mennekes_amtron_phase_switch_mode
       name: Phasenumschaltung
-    - entity: switch.mennekes_amtron_cp_availability
-      name: Verfügbarkeit
   - type: conditional
     conditions:
     - condition: state
@@ -286,8 +284,6 @@ views:
       name: Kommunikations-Timeout
     - entity: switch.mennekes_amtron_pause_charging
       name: Ladevorgang pausieren
-    - entity: switch.mennekes_amtron_cp_availability
-      name: Verfügbarkeit
   - type: entities
     title: Daten & Integration
     icon: mdi:information-outline

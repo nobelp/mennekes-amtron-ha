@@ -206,18 +206,21 @@ MODBUS_SENSORS: tuple[AmtronSensorDescription, ...] = (
     ),
 )
 
+# Totals are computed from the most recent sessions only, so they can decrease when
+# an old session leaves the window. TOTAL (not TOTAL_INCREASING) avoids Home Assistant
+# treating such a drop as a meter reset in the long-term statistics.
 SESSION_SENSORS: tuple[AmtronSensorDescription, ...] = (
     AmtronSensorDescription(
         key="total_sessions",
         name="Total Sessions",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     AmtronSensorDescription(
         key="total_kwh",
         name="Total Charged Energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     AmtronSensorDescription(
         key="total_cost",

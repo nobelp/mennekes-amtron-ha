@@ -20,6 +20,13 @@
           "price_per_kwh": "Wird für Kostenberechnungen verwendet. In der Währung von Home Assistant angeben (Einstellungen → System → Allgemein).",
           "scan_interval": "Wie oft Sensorwerte aktualisiert werden"
         }
+      },
+      "reauth_confirm": {
+        "title": "Mennekes AMTRON Wallbox erneut anmelden",
+        "description": "Die Wallbox unter {host} hat das gespeicherte Installer-Passwort abgelehnt. Geben Sie das aktuelle Installer-Passwort ein.",
+        "data": {
+          "api_password": "Installer-Passwort"
+        }
       }
     },
     "error": {
@@ -32,6 +39,7 @@
       "unknown_error": "Ein unerwarteter Fehler ist aufgetreten. Überprüfen Sie die Logs für Details."
     },
     "abort": {
+      "reauth_successful": "Anmeldung wiederhergestellt.",
       "already_configured": "Diese Wallbox ist bereits konfiguriert."
     }
   },
