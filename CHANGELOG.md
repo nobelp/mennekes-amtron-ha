@@ -8,11 +8,13 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
-## [2.3.1-beta.1] - 2026-10-20
+## [2.3.1] - 2026-10-20
 
-Pre-release. Korrigiert die Ladehistorie der Firmware 1.6.46 (Issue [#10](https://github.com/nobelp/mennekes-amtron-ha/issues/10)). Ältere Firmware wird weiterhin unterstützt.
+Korrigiert die Ladehistorie der Firmware 1.6.46 (Issue [#10](https://github.com/nobelp/mennekes-amtron-ha/issues/10)). Ältere Firmware wird weiterhin unterstützt. Vorab als Pre-release [2.3.1-beta.1](https://github.com/nobelp/mennekes-amtron-ha/releases/tag/v2.3.1-beta.1) veröffentlicht.
 
-*Pre-release. Fixes the charging history on firmware 1.6.46 (issue [#10](https://github.com/nobelp/mennekes-amtron-ha/issues/10)). Older firmware is still supported.*
+*Fixes the charging history on firmware 1.6.46 (issue [#10](https://github.com/nobelp/mennekes-amtron-ha/issues/10)). Older firmware is still supported. Previously released as pre-release [2.3.1-beta.1](https://github.com/nobelp/mennekes-amtron-ha/releases/tag/v2.3.1-beta.1).*
+
+Vielen Dank an [@Jirka-Eh](https://github.com/Jirka-Eh), der den Fehler mit der Firmware 1.6.46 gemeldet und die Lösung vorgeschlagen hat. *Thanks to [@Jirka-Eh](https://github.com/Jirka-Eh) for reporting the firmware 1.6.46 issue and proposing the fix.*
 
 ### Behoben / Fixed
 
