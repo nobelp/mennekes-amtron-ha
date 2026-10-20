@@ -8,6 +8,23 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.3.1-beta.1] - 2026-10-20
+
+Pre-release. Korrigiert die Ladehistorie der Firmware 1.6.46 (Issue [#10](https://github.com/nobelp/mennekes-amtron-ha/issues/10)). Ältere Firmware wird weiterhin unterstützt.
+
+*Pre-release. Fixes the charging history on firmware 1.6.46 (issue [#10](https://github.com/nobelp/mennekes-amtron-ha/issues/10)). Older firmware is still supported.*
+
+### Behoben / Fixed
+
+- Firmware 1.6.46 liefert die Sessions in einem Container `list` und mit anderen Feldnamen (`startTimestamp`, `stopTimestamp`, `chargedEnergy`, `userToken.identifier`). Die Integration erkennt beides. Vorher waren Sessions leer, bzw. Energie, RFID und Zeiten fehlten. *Firmware 1.6.46 returns sessions in a `list` container with different field names. The integration reads both formats. Previously sessions were empty, or energy, RFID and times were missing.*
+- Die Sessions werden nach Startzeit absteigend sortiert, unabhängig von der Reihenfolge der Antwort. Dadurch zeigen „Letztes Fahrzeug“ und „Letzte Ladeenergie“ die neueste Session. Vorher wurde nach einem Feld sortiert, das es bei 1.6.46 nicht gibt. *Sessions are sorted newest first by start time, whatever order the response uses. "Last vehicle" and "last charging energy" therefore show the newest session. Previously the sort used a field that firmware 1.6.46 does not provide.*
+- `userToken` mit `null` führt nicht mehr zu einem Fehler. *A `null` `userToken` no longer causes an error.*
+- Liefert die Wallbox mehr Sessions, als in einer Abfrage geladen werden, steht das jetzt im Protokoll. *If the wallbox reports more sessions than one request returns, this is now logged.*
+
+### Hinzugefügt / Added
+
+- Tests für das Parsing der Sessions (`tests/`, ausführbar mit `pytest -q tests` nach `pip install -r requirements-test.txt`). *Tests for session parsing (`tests/`, run with `pytest -q tests` after `pip install -r requirements-test.txt`).*
+
 ## [2.3.0] - 2026-10-19
 
 Das Installer-Passwort wird beim Einrichten geprüft, und bei geändertem Passwort fragt die Integration neu an. Außerdem Korrekturen aus dem HACS-Review.

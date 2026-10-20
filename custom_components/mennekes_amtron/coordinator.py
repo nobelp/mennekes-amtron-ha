@@ -25,6 +25,7 @@ from .const import (
     REG_SIGNALED_CURRENT,
     REG_VEHICLE_STATE,
 )
+from .session_parser import extract_sessions, parse_sessions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -300,23 +301,28 @@ class SessionDataCoordinator(WallboxApiCoordinator):
         ) as r:
             r.raise_for_status()
             data = await r.json()
-            if isinstance(data, list):
-                return data
-            return data.get("items", data.get("data", []))
+        sessions = extract_sessions(data)
+        total = data.get("count") if isinstance(data, dict) else None
+        if isinstance(total, int) and total > len(sessions):
+            # Only the first page is fetched; say so instead of showing partial totals silently.
+            _LOGGER.warning(
+                "Wallbox reports %s charging sessions, %s were fetched", total, len(sessions)
+            )
+        return sessions
 
     def _process(self, raw: list) -> dict[str, Any]:
         sessions = []
-        for s in sorted(raw, key=lambda x: x.get("startTime", ""), reverse=True):
-            rfid = s.get("rfidTag") or s.get("rfid") or ""
-            energy = float(s.get("energyConsumption", s.get("energy_kwh", 0)) or 0)
+        for parsed in parse_sessions(raw):
+            rfid = parsed["rfid"]
+            energy = parsed["energy_kwh"]
             vehicle = self._vehicles.get(rfid, rfid or "Unknown")
             sessions.append({
                 "rfid": rfid,
                 "vehicle": vehicle,
                 "energy_kwh": round(energy, 3),
                 "cost": round(energy * self._price, 2),
-                "start": s.get("startTime", ""),
-                "end": s.get("stopTime", s.get("endTime", "")),
+                "start": parsed["start"],
+                "end": parsed["end"],
             })
 
         total_kwh = sum(s["energy_kwh"] for s in sessions)
