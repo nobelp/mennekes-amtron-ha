@@ -18,6 +18,8 @@ Der Regler **HEMS Current Limit** reicht jetzt bis 32 A statt 16 A (Issue [#11](
 >
 > *Testing note: only tested up to 16 A because no 22 kW installation is available. Behaviour above 16 A is untested; feedback from 22 kW owners is welcome. On 11 kW devices (16 A) it was not verified that the wallbox limits values above 16 A — this is assumed, not verified.*
 
+Vielen Dank an [@PanzerTeo](https://github.com/PanzerTeo), der den Fehler an einer AMTRON 4You 560 22 C2 gemeldet und die Lösung vorgeschlagen hat. *Thanks to [@PanzerTeo](https://github.com/PanzerTeo) for reporting the issue on an AMTRON 4You 560 22 C2 and proposing the fix.*
+
 ### Behoben / Fixed
 
 - `number.mennekes_amtron_hems_current_limit` erlaubt 0–32 A (vorher 0–16 A), passend zu `Safe Current` und zu 22-kW-Geräten. *`number.mennekes_amtron_hems_current_limit` allows 0–32 A (previously 0–16 A), matching `Safe Current` and 22 kW devices.*
