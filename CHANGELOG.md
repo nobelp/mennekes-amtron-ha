@@ -8,6 +8,21 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.3.2] - 2026-11-05
+
+Der Regler **HEMS Current Limit** reicht jetzt bis 32 A statt 16 A (Issue [#11](https://github.com/nobelp/mennekes-amtron-ha/issues/11)).
+
+*The **HEMS Current Limit** slider now goes up to 32 A instead of 16 A (issue [#11](https://github.com/nobelp/mennekes-amtron-ha/issues/11)).*
+
+> **Hinweis zum Test:** Getestet wurde nur bis 16 A, weil keine 22-kW-Anlage zur Verfügung steht. Das Verhalten oberhalb von 16 A ist ungetestet; Rückmeldungen von 22-kW-Besitzern sind willkommen. Bei 11-kW-Geräten (16 A) wird nicht überprüft, ob die Wallbox Werte über 16 A begrenzt — das ist angenommen, aber nicht verifiziert.
+>
+> *Testing note: only tested up to 16 A because no 22 kW installation is available. Behaviour above 16 A is untested; feedback from 22 kW owners is welcome. On 11 kW devices (16 A) it was not verified that the wallbox limits values above 16 A — this is assumed, not verified.*
+
+### Behoben / Fixed
+
+- `number.mennekes_amtron_hems_current_limit` erlaubt 0–32 A (vorher 0–16 A), passend zu `Safe Current` und zu 22-kW-Geräten. *`number.mennekes_amtron_hems_current_limit` allows 0–32 A (previously 0–16 A), matching `Safe Current` and 22 kW devices.*
+- Manuelle Installation: `input_number.wallbox_hems_current_limit` hat ebenfalls das Maximum 32. Die Dokumentation nennt 6–32 A statt 6–16 A. *Manual installation: `input_number.wallbox_hems_current_limit` also has a maximum of 32. The documentation states 6–32 A instead of 6–16 A.*
+
 ## [2.3.1] - 2026-10-20
 
 Korrigiert die Ladehistorie der Firmware 1.6.46 (Issue [#10](https://github.com/nobelp/mennekes-amtron-ha/issues/10)). Ältere Firmware wird weiterhin unterstützt. Vorab als Pre-release [2.3.1-beta.1](https://github.com/nobelp/mennekes-amtron-ha/releases/tag/v2.3.1-beta.1) veröffentlicht.

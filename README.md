@@ -42,6 +42,10 @@ Voraussetzung am Gerät: Protokollversion **1.5** und aktiviertes Modbus TCP. Re
 den Modus — `0` = aus, `1` = nur lesen, `2` = lesen und schreiben. Für HEMS-Limit und Safe Current
 ist `2` erforderlich.
 
+Der Regler **HEMS Current Limit** reicht von 0 bis 32 A (22-kW-Geräte). Die Wallbox begrenzt den
+Wert auf ihren eigenen Maximalstrom; bei 11-kW-Geräten (16 A) wirken Werte darüber nicht. Getestet
+wurde nur bis 16 A, 22-kW-Geräte sind ungetestet — Rückmeldungen sind willkommen.
+
 ---
 
 ## Schritt 1: Integration installieren

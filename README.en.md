@@ -40,6 +40,10 @@ with firmware 1.5.41.
 Device requirement: protocol version **1.5** and Modbus TCP enabled. Register `2010` reports the
 mode — `0` = off, `1` = read only, `2` = read and write. HEMS limit and safe current require `2`.
 
+The **HEMS Current Limit** slider ranges from 0 to 32 A (22 kW devices). The wallbox limits the value
+to its own maximum current; on 11 kW devices (16 A) higher values have no effect. Only tested up to
+16 A, 22 kW devices are untested — feedback is welcome.
+
 ---
 
 ## Step 1: Install the integration

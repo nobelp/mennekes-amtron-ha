@@ -2,7 +2,7 @@ wallbox_hems_current_limit:
   name: "Wallbox HEMS Stromlimit"
   unit_of_measurement: "A"
   min: 0
-  max: 16
+  max: 32
   step: 1
   mode: slider
   icon: mdi:lightning-bolt

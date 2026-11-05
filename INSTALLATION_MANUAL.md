@@ -697,7 +697,7 @@ All configuration parameters:
 |--------|-------------|
 | `input_number.wallbox_price_per_kwh` | Electricity price per kWh – changes all cost calculations immediately |
 | `input_text.wallbox_currency` | Currency code (ISO 4217, e.g. `EUR`) shown on all cost displays |
-| `input_number.wallbox_hems_current_limit` | HEMS current limit (0 = pause, 6-16A) |
+| `input_number.wallbox_hems_current_limit` | HEMS current limit (0 = pause, 6-32A) |
 | `input_number.wallbox_safe_current` | Safe current (0-32A) |
 | `input_number.wallbox_comm_timeout` | Communication timeout (1-300s) |
 | `input_boolean.wallbox_cp_availability` | CP availability on/off |
@@ -921,7 +921,7 @@ Unknown RFIDs appear as `"RFID_CODE — RFID_CODE"` (RFID = name, not yet assign
 |--------|-------------|
 | `input_number.wallbox_price_per_kwh` | Electricity price per kWh (live, 0.01–2.00) |
 | `input_text.wallbox_currency` | Currency code, ISO 4217 (live, default `CHF`) |
-| `input_number.wallbox_hems_current_limit` | HEMS limit setting (0-16A) |
+| `input_number.wallbox_hems_current_limit` | HEMS limit setting (0-32A) |
 | `input_number.wallbox_safe_current` | Safe current setting (0-32A) |
 | `input_number.wallbox_comm_timeout` | Comm timeout setting (1-300s) |
 | `input_boolean.wallbox_cp_availability` | CP availability |
@@ -1031,11 +1031,11 @@ Requires register 2010 to report `2` (Modbus TCP in read-and-write mode).
 
 | Register | Description | Range |
 |----------|-------------|-------|
-| 131 | Safe current | 0 A (pause) or 6–16 A; values below 6 A become 0 A |
+| 131 | Safe current | 0 A (pause) or 6–32 A; values below 6 A become 0 A |
 | 132 | Communication timeout | uint16 [s] — register 131 applies afterwards |
 | 613–615 | CPN EMS current limit L1/L2/L3 | 3 × uint16 [A]; the lowest value applies to all phases |
-| 2000 | HEMS current limit | 0 A (pause) or 6–16 A |
-| 2001 | HEMS current limit in 0.1 A | 0 or 60–160 |
+| 2000 | HEMS current limit | 0 A (pause) or 6–32 A |
+| 2001 | HEMS current limit in 0.1 A | 0 or 60–320 |
 | 2002 | HEMS power limit | 0 W (pause), otherwise between registers 2012 and 2013 |
 | 1000 / 1001 / 1002 | HEMS limits, legacy addresses | 1000 is a copy of 2000; 1001 and 1002 are **deprecated** → 2001 / 2002 |
 
