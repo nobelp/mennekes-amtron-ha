@@ -178,7 +178,12 @@ MODBUS_SENSORS: tuple[AmtronSensorDescription, ...] = (
     AmtronSensorDescription(
         key="vehicle_state",
         name="Vehicle State",
-        value_fn=lambda d: VEHICLE_STATE_MAP.get(d.get("vehicle_state", 0), "Unknown"),
+        translation_key="vehicle_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(VEHICLE_STATE_MAP.values()),
+        # Values outside the map are reported as unknown (None) because an
+        # enum sensor must not emit a state that is not in its options.
+        value_fn=lambda d: VEHICLE_STATE_MAP.get(d.get("vehicle_state")),
     ),
     AmtronSensorDescription(
         key="hems_current_limit",

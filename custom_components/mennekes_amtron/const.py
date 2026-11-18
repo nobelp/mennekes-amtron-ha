@@ -90,10 +90,12 @@ CP_STATUS_MAP = {
     9: "Faulted",
 }
 
+# Keys of the state translations (entity.sensor.vehicle_state.state.*) for the
+# IEC 61851 control-pilot states A-E reported in register 122.
 VEHICLE_STATE_MAP = {
-    1: "A – Not connected",
-    2: "B – Connected",
-    3: "C – Charging",
-    4: "D – Charging (ventilation)",
-    5: "E – Error",
+    1: "a_not_connected",
+    2: "b_connected",
+    3: "c_charging",
+    4: "d_charging_ventilation",
+    5: "e_error",
 }

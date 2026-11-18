@@ -14,6 +14,10 @@ Der Sensor **Vehicle State** zeigt wieder den Fahrzeugzustand statt `Unknown` (I
 
 *The **Vehicle State** sensor shows the vehicle state again instead of `Unknown` (issue [#12](https://github.com/nobelp/mennekes-amtron-ha/issues/12)).*
 
+### Geändert / Changed
+
+- Die Zustände des Sensors **Vehicle State** werden jetzt übersetzt (Deutsch/Englisch), z. B. `B – Verbunden` statt `B – Connected`. Der Sensor ist nun ein Enum-Sensor; die internen Zustandswerte lauten `a_not_connected`, `b_connected`, `c_charging`, `d_charging_ventilation`, `e_error`. Automatisierungen, die den Text `B – Connected` o. ä. abfragen, müssen auf diese Werte angepasst werden. Unbekannte Registerwerte ergeben `unknown`. *The states of the **Vehicle State** sensor are now translated (German/English), e.g. `B – Verbunden` instead of `B – Connected`. The sensor is now an enum sensor; the internal state values are `a_not_connected`, `b_connected`, `c_charging`, `d_charging_ventilation`, `e_error`. Automations that compare against text such as `B – Connected` must be updated to these values. Unknown register values result in `unknown`.*
+
 ### Behoben / Fixed
 
 - Fahrzeugzustand (Register 122) und CP-Verfügbarkeit (Register 124) werden einzeln gelesen. Register 123 ist nicht lesbar; die bisherige Blocklesung 122–124 scheiterte mit Modbus-Exception 0x02, daher blieben beide Werte leer. *Vehicle state (register 122) and CP availability (register 124) are read individually. Register 123 is not readable; the former block read 122–124 failed with Modbus exception 0x02, leaving both values unset.*

@@ -58,5 +58,18 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "vehicle_state": {
+        "state": {
+          "a_not_connected": "A – Not connected",
+          "b_connected": "B – Connected",
+          "c_charging": "C – Charging",
+          "d_charging_ventilation": "D – Charging (ventilation)",
+          "e_error": "E – Error"
+        }
+      }
+    }
   }
 }
