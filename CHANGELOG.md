@@ -8,6 +8,16 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.3.3] - 2026-11-18
+
+Der Sensor **Vehicle State** zeigt wieder den Fahrzeugzustand statt `Unknown` (Issue [#12](https://github.com/nobelp/mennekes-amtron-ha/issues/12)).
+
+*The **Vehicle State** sensor shows the vehicle state again instead of `Unknown` (issue [#12](https://github.com/nobelp/mennekes-amtron-ha/issues/12)).*
+
+### Behoben / Fixed
+
+- Fahrzeugzustand (Register 122) und CP-Verfügbarkeit (Register 124) werden einzeln gelesen. Register 123 ist nicht lesbar; die bisherige Blocklesung 122–124 scheiterte mit Modbus-Exception 0x02, daher blieben beide Werte leer. *Vehicle state (register 122) and CP availability (register 124) are read individually. Register 123 is not readable; the former block read 122–124 failed with Modbus exception 0x02, leaving both values unset.*
+
 ## [2.3.2] - 2026-11-05
 
 Der Regler **HEMS Current Limit** reicht jetzt bis 32 A statt 16 A (Issue [#11](https://github.com/nobelp/mennekes-amtron-ha/issues/11)).

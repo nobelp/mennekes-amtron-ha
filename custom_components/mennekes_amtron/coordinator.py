@@ -125,11 +125,16 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
                     _to_uint32(regs[i], regs[i + 1]) for i in range(1, 9, 2)
                 ]
 
-            # Vehicle state + CP availability: 122–124 (3 registers)
-            r = await client.read_holding_registers(REG_VEHICLE_STATE, count=3, device_id=MODBUS_SLAVE_ID)
+            # Vehicle state (122) and CP availability (124) must be read
+            # separately: register 123 is not readable and answers with
+            # Modbus exception 0x02 (Illegal Data Address), so any block read
+            # spanning 122–124 fails and leaves both values unset.
+            r = await client.read_holding_registers(REG_VEHICLE_STATE, count=1, device_id=MODBUS_SLAVE_ID)
             if not r.isError():
                 data["vehicle_state"] = r.registers[0]
-                data["cp_availability"] = r.registers[2]
+            r = await client.read_holding_registers(REG_VEHICLE_STATE + 2, count=1, device_id=MODBUS_SLAVE_ID)
+            if not r.isError():
+                data["cp_availability"] = r.registers[0]
 
             # Safe current + comm timeout: 131–132 (2 registers)
             r = await client.read_holding_registers(REG_SAFE_CURRENT, count=2, device_id=MODBUS_SLAVE_ID)
