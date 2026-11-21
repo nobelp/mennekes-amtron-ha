@@ -84,14 +84,30 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
         self._port = port
         self._client = None
 
+    def _discard_client(self) -> None:
+        """Close the current client, if any, so that it holds no connection."""
+        if self._client is not None:
+            self._client.close()
+            self._client = None
+
     async def _get_client(self):
         from pymodbus.client import AsyncModbusTcpClient
 
         if self._client is not None and self._client.connected:
             return self._client
 
+        # Close the stale client before replacing it. pymodbus' own auto-reconnect
+        # is disabled (reconnect_delay=0): the coordinator already reconnects on
+        # every update, and an abandoned client would otherwise keep reconnecting
+        # in the background, piling up sessions on a wallbox that serves one
+        # Modbus client at a time (issue #13).
+        self._discard_client()
+
         self._client = AsyncModbusTcpClient(
-            self._host, port=self._port, timeout=MODBUS_CONNECT_TIMEOUT
+            self._host,
+            port=self._port,
+            timeout=MODBUS_CONNECT_TIMEOUT,
+            reconnect_delay=0,
         )
         await self._client.connect()
 
@@ -100,7 +116,7 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
         # reliable signal. Without this check the first read would fail with a
         # bare pymodbus ConnectionException traceback instead of a usable hint.
         if not self._client.connected:
-            self._client = None
+            self._discard_client()
             raise UpdateFailed(
                 f"No Modbus TCP connection to {self._host}:{self._port} — the wallbox "
                 "accepted the TCP handshake and closed it again. It serves a single "
@@ -207,9 +223,7 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
         except UpdateFailed:
             raise
         except Exception as err:
-            if self._client:
-                self._client.close()
-                self._client = None
+            self._discard_client()
             raise UpdateFailed(f"Modbus communication error: {err}") from err
 
     async def write_register(self, address: int, value: int) -> bool:
@@ -219,15 +233,11 @@ class ModbusDataCoordinator(DataUpdateCoordinator):
             return not result.isError()
         except Exception as err:
             _LOGGER.error("Failed to write register %s = %s: %s", address, value, err)
-            if self._client:
-                self._client.close()
-                self._client = None
+            self._discard_client()
             return False
 
     async def async_close(self) -> None:
-        if self._client:
-            self._client.close()
-            self._client = None
+        self._discard_client()
 
 
 class WallboxApiCoordinator(DataUpdateCoordinator):
