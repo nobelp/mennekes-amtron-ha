@@ -8,6 +8,20 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.3.4-beta.1] - 2026-11-21
+
+Pre-release. Behebt den Verbindungsstau zur Wallbox nach einem Abbruch der Modbus-Sitzung (Issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13), gemeldet und analysiert von [@ePiccio](https://github.com/ePiccio)).
+
+*Pre-release. Fixes the pile-up of connections to the wallbox after the Modbus session was dropped (issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13), reported and analysed by [@ePiccio](https://github.com/ePiccio)).*
+
+### Behoben / Fixed
+
+- Ein nicht mehr verbundener Modbus-Client wird jetzt geschlossen, bevor ein neuer erzeugt wird. Vorher blieben die alten Clients bestehen und verbanden sich im Hintergrund endlos neu. Die Wallbox bedient nur einen Modbus-Client gleichzeitig, daher wuchs die Zahl der Sitzungen, bis weder Modbus noch die Weboberfläche der Wallbox antworteten. Erst ein Neustart von Home Assistant gab die Verbindungen frei. *A Modbus client that is no longer connected is now closed before a new one is created. Previously the old clients stayed alive and kept reconnecting in the background forever. The wallbox serves one Modbus client at a time, so the number of sessions grew until neither Modbus nor the wallbox web interface answered. Only a Home Assistant restart released the connections.*
+
+### Geändert / Changed
+
+- Der automatische Wiederverbindungsversuch von pymodbus ist abgeschaltet (`reconnect_delay=0`). Die Integration verbindet bei jeder Aktualisierung selbst neu. Nach einem Verbindungsabbruch erfolgt der nächste Versuch daher erst mit der nächsten Aktualisierung (Standard: 30 s). *The automatic reconnect of pymodbus is disabled (`reconnect_delay=0`). The integration reconnects on every update itself. After a dropped connection the next attempt therefore happens with the next update (default: 30 s).*
+
 ## [2.3.3] - 2026-11-18
 
 Der Sensor **Vehicle State** zeigt wieder den Fahrzeugzustand statt `Unknown` (Issue [#12](https://github.com/nobelp/mennekes-amtron-ha/issues/12)).
