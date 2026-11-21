@@ -8,6 +8,16 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.3.4-beta.2] - 2026-11-21
+
+Pre-release. Ein langsamer Webserver der Wallbox hält das Laden der Integration nicht mehr auf. Enthält außerdem die Korrektur aus 2.3.4-beta.1 (Issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13)).
+
+*Pre-release. A slow wallbox web server no longer holds up loading the integration. Also contains the fix from 2.3.4-beta.1 (issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13)).*
+
+### Behoben / Fixed
+
+- Die Sessions und die Systemereignisse werden nach dem Start im Hintergrund geladen, nicht mehr währenddessen. Vorher konnte eine Wallbox, die die Antwort der Weboberfläche nicht vollständig lieferte, das Laden bis zu 90 s aufhalten. Wurde es dabei abgebrochen (etwa durch erneutes Neuladen), blieben alle Entitäten `unavailable`, obwohl Modbus funktionierte. Die Modbus-Sensoren stehen jetzt sofort bereit, die Ladehistorie und die Ereignisse folgen, sobald die Wallbox antwortet. Ein abgelehntes Installateur-Passwort startet weiterhin die erneute Anmeldung. *Sessions and system events are loaded in the background after startup instead of during it. Previously a wallbox that did not deliver the web interface response completely could hold the loading for up to 90 s. If it was cancelled meanwhile (for example by reloading again), every entity stayed `unavailable` although Modbus worked. The Modbus sensors are now ready immediately; the charging history and events follow as soon as the wallbox answers. A rejected installer password still starts the re-authentication.*
+
 ## [2.3.4-beta.1] - 2026-11-21
 
 Pre-release. Behebt den Verbindungsstau zur Wallbox nach einem Abbruch der Modbus-Sitzung (Issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13), gemeldet und analysiert von [@ePiccio](https://github.com/ePiccio)).
