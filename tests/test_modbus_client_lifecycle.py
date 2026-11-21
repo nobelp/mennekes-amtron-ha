@@ -4,96 +4,20 @@ The wallbox serves one Modbus client at a time. A client that is replaced
 without close() keeps reconnecting in the background (pymodbus auto-reconnect)
 and piles up sessions until the wallbox stops answering.
 
-Home Assistant and pymodbus are replaced by minimal stand-ins, so the tests
-need neither package. The coordinator is loaded from its file path.
+Home Assistant and pymodbus are replaced by the stand-ins of ha_stubs, so the
+tests need neither package.
 """
 
 import asyncio
-import importlib.util
-import sys
-import types
-from pathlib import Path
 
 import pytest
-
-_COMPONENT = Path(__file__).resolve().parent.parent / "custom_components" / "mennekes_amtron"
-
-
-class _UpdateFailed(Exception):
-    """Stand-in for homeassistant.helpers.update_coordinator.UpdateFailed."""
-
-
-class _DataUpdateCoordinator:
-    """Stand-in that accepts the constructor arguments of the real class."""
-
-    def __init__(self, hass, logger, *, name, update_interval=None):
-        self.hass = hass
-
-
-class _FakeModbusClient:
-    """Records how it is created and closed; connection result is configurable."""
-
-    instances: list["_FakeModbusClient"] = []
-    connects_successfully = True
-
-    def __init__(self, host, port, **kwargs):
-        self.kwargs = kwargs
-        self.connected = False
-        self.close_calls = 0
-        _FakeModbusClient.instances.append(self)
-
-    async def connect(self):
-        self.connected = _FakeModbusClient.connects_successfully
-        return self.connected
-
-    def close(self):
-        self.close_calls += 1
-        self.connected = False
-
-
-def _module(name: str, **attributes) -> types.ModuleType:
-    module = types.ModuleType(name)
-    vars(module).update(attributes)
-    return module
+from ha_stubs import FakeModbusClient as _FakeModbusClient
+from ha_stubs import UpdateFailed as _UpdateFailed
 
 
 @pytest.fixture
-def coordinator_module(monkeypatch):
-    _FakeModbusClient.instances = []
-    _FakeModbusClient.connects_successfully = True
-
-    stand_ins = {
-        "aiohttp": _module("aiohttp", ClientSession=object),
-        "homeassistant": _module("homeassistant"),
-        "homeassistant.core": _module("homeassistant.core", HomeAssistant=object),
-        "homeassistant.exceptions": _module(
-            "homeassistant.exceptions", ConfigEntryAuthFailed=Exception
-        ),
-        "homeassistant.helpers": _module("homeassistant.helpers"),
-        "homeassistant.helpers.update_coordinator": _module(
-            "homeassistant.helpers.update_coordinator",
-            DataUpdateCoordinator=_DataUpdateCoordinator,
-            UpdateFailed=_UpdateFailed,
-        ),
-        "pymodbus": _module("pymodbus"),
-        "pymodbus.client": _module("pymodbus.client", AsyncModbusTcpClient=_FakeModbusClient),
-    }
-    for name, module in stand_ins.items():
-        monkeypatch.setitem(sys.modules, name, module)
-
-    # A bare package object avoids running the integration's __init__, which
-    # imports the full Home Assistant platform.
-    package = types.ModuleType("amtron_under_test")
-    package.__path__ = [str(_COMPONENT)]
-    monkeypatch.setitem(sys.modules, "amtron_under_test", package)
-
-    spec = importlib.util.spec_from_file_location(
-        "amtron_under_test.coordinator", _COMPONENT / "coordinator.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    monkeypatch.setitem(sys.modules, "amtron_under_test.coordinator", module)
-    spec.loader.exec_module(module)
-    return module
+def coordinator_module(integration):
+    return integration.coordinator
 
 
 @pytest.fixture

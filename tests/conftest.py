@@ -8,6 +8,9 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+from ha_stubs import load_integration, unload_integration
+
 _MODULE_PATH = (
     Path(__file__).resolve().parent.parent
     / "custom_components"
@@ -19,3 +22,11 @@ _spec = importlib.util.spec_from_file_location("session_parser", _MODULE_PATH)
 session_parser = importlib.util.module_from_spec(_spec)
 sys.modules["session_parser"] = session_parser
 _spec.loader.exec_module(session_parser)
+
+
+@pytest.fixture
+def integration(monkeypatch):
+    """The integration package, imported with Home Assistant stand-ins."""
+    package = load_integration(monkeypatch)
+    yield package
+    unload_integration()

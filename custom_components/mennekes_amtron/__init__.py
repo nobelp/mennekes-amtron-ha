@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, Platform
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import (
     DOMAIN,
@@ -27,9 +25,8 @@ from .coordinator import (
     ModbusDataCoordinator,
     SessionDataCoordinator,
     SystemEventsCoordinator,
+    WallboxApiCoordinator,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.SENSOR,
@@ -79,17 +76,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await modbus_coord.async_config_entry_first_refresh()
 
-    # Both REST data sets are non-critical and refresh on demand afterwards –
-    # never block setup on API failures. A rejected password is the exception:
-    # it must reach Home Assistant so the user is asked to re-enter it.
-    for coordinator in (session_coord, events_coord):
-        try:
-            await coordinator.async_config_entry_first_refresh()
-        except ConfigEntryAuthFailed:
-            raise
-        except Exception:  # setup must survive any other API problem
-            _LOGGER.warning("%s could not be loaded during setup", coordinator.name, exc_info=True)
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "modbus": modbus_coord,
         "sessions": session_coord,
@@ -113,7 +99,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, _core_config_updated)
     )
+
+    # The REST data sets are non-critical and refresh on demand afterwards, so
+    # they must never delay or abort the setup. A slow wallbox web service used
+    # to hold the setup for up to 90 s and, when it was cancelled meanwhile,
+    # left every entity unavailable although Modbus worked. The coordinators
+    # report failures themselves; a rejected password starts the
+    # re-authentication flow.
+    entry.async_create_background_task(
+        hass,
+        _async_load_rest_data(session_coord, events_coord),
+        name=f"{DOMAIN}_initial_rest_refresh",
+    )
     return True
+
+
+async def _async_load_rest_data(*coordinators: WallboxApiCoordinator) -> None:
+    """Fetch the REST data one after another, as the wallbox serves requests slowly."""
+    for coordinator in coordinators:
+        await coordinator.async_refresh()
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
