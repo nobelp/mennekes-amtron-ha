@@ -8,29 +8,28 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
-## [2.3.4-beta.2] - 2026-11-21
+## [2.3.4] - 2026-11-21
 
-Pre-release. Ein langsamer Webserver der Wallbox hält das Laden der Integration nicht mehr auf. Enthält außerdem die Korrektur aus 2.3.4-beta.1 (Issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13)).
+Die Integration überlastet die Wallbox nach einem Abbruch der Modbus-Sitzung nicht mehr (Issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13), gemeldet und analysiert von [@ePiccio](https://github.com/ePiccio)), und ein langsamer Webserver der Wallbox hält das Laden der Integration nicht mehr auf (Issue [#14](https://github.com/nobelp/mennekes-amtron-ha/issues/14)).
 
-*Pre-release. A slow wallbox web server no longer holds up loading the integration. Also contains the fix from 2.3.4-beta.1 (issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13)).*
+*The integration no longer overloads the wallbox after the Modbus session was dropped (issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13), reported and analysed by [@ePiccio](https://github.com/ePiccio)), and a slow wallbox web server no longer holds up loading the integration (issue [#14](https://github.com/nobelp/mennekes-amtron-ha/issues/14)).*
 
-### Behoben / Fixed
-
-- Die Sessions und die Systemereignisse werden nach dem Start im Hintergrund geladen, nicht mehr währenddessen. Vorher konnte eine Wallbox, die die Antwort der Weboberfläche nicht vollständig lieferte, das Laden bis zu 90 s aufhalten. Wurde es dabei abgebrochen (etwa durch erneutes Neuladen), blieben alle Entitäten `unavailable`, obwohl Modbus funktionierte. Die Modbus-Sensoren stehen jetzt sofort bereit, die Ladehistorie und die Ereignisse folgen, sobald die Wallbox antwortet. Ein abgelehntes Installateur-Passwort startet weiterhin die erneute Anmeldung. *Sessions and system events are loaded in the background after startup instead of during it. Previously a wallbox that did not deliver the web interface response completely could hold the loading for up to 90 s. If it was cancelled meanwhile (for example by reloading again), every entity stayed `unavailable` although Modbus worked. The Modbus sensors are now ready immediately; the charging history and events follow as soon as the wallbox answers. A rejected installer password still starts the re-authentication.*
-
-## [2.3.4-beta.1] - 2026-11-21
-
-Pre-release. Behebt den Verbindungsstau zur Wallbox nach einem Abbruch der Modbus-Sitzung (Issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13), gemeldet und analysiert von [@ePiccio](https://github.com/ePiccio)).
-
-*Pre-release. Fixes the pile-up of connections to the wallbox after the Modbus session was dropped (issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13), reported and analysed by [@ePiccio](https://github.com/ePiccio)).*
-
-### Behoben / Fixed
-
-- Ein nicht mehr verbundener Modbus-Client wird jetzt geschlossen, bevor ein neuer erzeugt wird. Vorher blieben die alten Clients bestehen und verbanden sich im Hintergrund endlos neu. Die Wallbox bedient nur einen Modbus-Client gleichzeitig, daher wuchs die Zahl der Sitzungen, bis weder Modbus noch die Weboberfläche der Wallbox antworteten. Erst ein Neustart von Home Assistant gab die Verbindungen frei. *A Modbus client that is no longer connected is now closed before a new one is created. Previously the old clients stayed alive and kept reconnecting in the background forever. The wallbox serves one Modbus client at a time, so the number of sessions grew until neither Modbus nor the wallbox web interface answered. Only a Home Assistant restart released the connections.*
+> **Nach dem Update:** Home Assistant neu starten.
+>
+> *After the update: restart Home Assistant.*
 
 ### Geändert / Changed
 
 - Der automatische Wiederverbindungsversuch von pymodbus ist abgeschaltet (`reconnect_delay=0`). Die Integration verbindet bei jeder Aktualisierung selbst neu. Nach einem Verbindungsabbruch erfolgt der nächste Versuch daher erst mit der nächsten Aktualisierung (Standard: 30 s). *The automatic reconnect of pymodbus is disabled (`reconnect_delay=0`). The integration reconnects on every update itself. After a dropped connection the next attempt therefore happens with the next update (default: 30 s).*
+
+### Behoben / Fixed
+
+- Ein nicht mehr verbundener Modbus-Client wird jetzt geschlossen, bevor ein neuer erzeugt wird (#13). Vorher blieben die alten Clients bestehen und verbanden sich im Hintergrund endlos neu. Die Wallbox bedient nur einen Modbus-Client gleichzeitig, daher wuchs die Zahl der Sitzungen, bis weder Modbus noch die Weboberfläche der Wallbox antworteten. Erst ein Neustart von Home Assistant gab die Verbindungen frei. *A Modbus client that is no longer connected is now closed before a new one is created (#13). Previously the old clients stayed alive and kept reconnecting in the background forever. The wallbox serves one Modbus client at a time, so the number of sessions grew until neither Modbus nor the wallbox web interface answered. Only a Home Assistant restart released the connections.*
+- Die Sessions und die Systemereignisse werden nach dem Start im Hintergrund geladen, nicht mehr währenddessen (#14). Vorher konnte eine Wallbox, die die Antwort der Weboberfläche nicht vollständig lieferte, das Laden bis zu 90 s aufhalten. Wurde es dabei abgebrochen (etwa durch erneutes Neuladen), blieben alle Entitäten `unavailable`, obwohl Modbus funktionierte. Die Modbus-Sensoren stehen jetzt sofort bereit, die Ladehistorie und die Ereignisse folgen, sobald die Wallbox antwortet. Ein abgelehntes Installateur-Passwort startet weiterhin die erneute Anmeldung. *Sessions and system events are loaded in the background after startup instead of during it (#14). Previously a wallbox that did not deliver the web interface response completely could hold the loading for up to 90 s. If it was cancelled meanwhile (for example by reloading again), every entity stayed `unavailable` although Modbus worked. The Modbus sensors are now ready immediately; the charging history and events follow as soon as the wallbox answers. A rejected installer password still starts the re-authentication.*
+
+### Bekannte Einschränkung / Known limitation
+
+- Der Sensor **System Events** legt die Ereignisliste in seinen Attributen ab. Home Assistant meldet dazu im Log, dass die Attribute die Grenze von 16384 Bytes des Recorders überschreiten. Die Funktion ist nicht beeinträchtigt. *The **System Events** sensor stores the event list in its attributes. Home Assistant logs that the attributes exceed the recorder limit of 16384 bytes. The function is not affected.*
 
 ## [2.3.3] - 2026-11-18
 
