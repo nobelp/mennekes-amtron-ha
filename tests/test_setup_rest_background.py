@@ -108,6 +108,8 @@ def test_setup_finishes_although_the_rest_api_hangs(setup):
 
     assert result is True
     assert _FakeCoordinator.refresh_log == []  # nothing waited for the REST API
+    for _name, task in entry.background_tasks:
+        task.close()  # never started here; avoids a "never awaited" warning
 
 
 def test_rest_data_is_loaded_in_a_background_task_of_the_entry(setup):

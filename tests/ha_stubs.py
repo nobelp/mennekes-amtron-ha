@@ -8,7 +8,9 @@ import enum
 import importlib.util
 import sys
 import types
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 COMPONENT_DIR = Path(__file__).resolve().parent.parent / "custom_components" / "mennekes_amtron"
 PACKAGE_NAME = "amtron_under_test"
@@ -67,6 +69,44 @@ class FakeModbusClient:
         self.connected = False
 
 
+class _AnyMember(type):
+    """Metaclass: every attribute access yields a member, like an enum would."""
+
+    def __getattr__(cls, name):
+        return f"{cls.__name__}.{name}"
+
+
+class _EnumLike(metaclass=_AnyMember):
+    pass
+
+
+def _enum_like(name: str) -> type:
+    return _AnyMember(name, (_EnumLike,), {})
+
+
+@dataclass(frozen=True, kw_only=True)
+class SensorEntityDescription:
+    """Stand-in with the fields the integration's sensor descriptions set."""
+
+    key: str
+    name: Any = None
+    native_unit_of_measurement: Any = None
+    device_class: Any = None
+    state_class: Any = None
+    options: Any = None
+    translation_key: Any = None
+    icon: Any = None
+    suggested_display_precision: Any = None
+    entity_category: Any = None
+
+
+class SensorEntity:
+    """Stand-in base class of the sensor entities."""
+
+    # Home Assistant's Entity declares the same default.
+    _unrecorded_attributes: frozenset[str] = frozenset()
+
+
 def _module(name: str, **attributes) -> types.ModuleType:
     module = types.ModuleType(name)
     vars(module).update(attributes)
@@ -85,7 +125,14 @@ def load_integration(monkeypatch) -> types.ModuleType:
             "homeassistant.config_entries", ConfigEntry=object
         ),
         "homeassistant.const": _module(
-            "homeassistant.const", EVENT_CORE_CONFIG_UPDATE="core_config_updated", Platform=Platform
+            "homeassistant.const",
+            EVENT_CORE_CONFIG_UPDATE="core_config_updated",
+            Platform=Platform,
+            UnitOfElectricCurrent=_enum_like("UnitOfElectricCurrent"),
+            UnitOfElectricPotential=_enum_like("UnitOfElectricPotential"),
+            UnitOfEnergy=_enum_like("UnitOfEnergy"),
+            UnitOfPower=_enum_like("UnitOfPower"),
+            UnitOfTime=_enum_like("UnitOfTime"),
         ),
         "homeassistant.core": _module(
             "homeassistant.core",
@@ -102,6 +149,20 @@ def load_integration(monkeypatch) -> types.ModuleType:
             DataUpdateCoordinator=DataUpdateCoordinator,
             CoordinatorEntity=CoordinatorEntity,
             UpdateFailed=UpdateFailed,
+        ),
+        "homeassistant.components": _module("homeassistant.components"),
+        "homeassistant.components.sensor": _module(
+            "homeassistant.components.sensor",
+            SensorDeviceClass=_enum_like("SensorDeviceClass"),
+            SensorEntity=SensorEntity,
+            SensorEntityDescription=SensorEntityDescription,
+            SensorStateClass=_enum_like("SensorStateClass"),
+        ),
+        "homeassistant.helpers.entity": _module(
+            "homeassistant.helpers.entity", DeviceInfo=dict
+        ),
+        "homeassistant.helpers.entity_platform": _module(
+            "homeassistant.helpers.entity_platform", AddEntitiesCallback=object
         ),
         "pymodbus": _module("pymodbus"),
         "pymodbus.client": _module("pymodbus.client", AsyncModbusTcpClient=FakeModbusClient),

@@ -360,6 +360,12 @@ class SessionSensor(CoordinatorEntity[SessionDataCoordinator], SensorEntity):
 class SystemEventsSensor(CoordinatorEntity[SystemEventsCoordinator], SensorEntity):
     """Event log of the wallbox. The list lives in the attributes for the dashboard."""
 
+    # The event list easily exceeds the 16384 bytes the recorder accepts per
+    # state, in which case it drops all attributes and logs a warning on every
+    # update. A history of the list is of no use, and the attributes stay
+    # readable for the dashboard.
+    _unrecorded_attributes = frozenset({"events", "levels", "event_ids"})
+
     _attr_has_entity_name = True
     _attr_name = "System Events"
     _attr_icon = "mdi:text-box-search-outline"
