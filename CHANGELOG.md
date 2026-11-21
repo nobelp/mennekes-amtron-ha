@@ -8,11 +8,15 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
-## [2.3.5-beta.1] - 2026-11-21
+## [2.3.5] - 2026-11-21
 
-Pre-release. Die Log-Warnung des Recorders zu den Attributen des Sensors **System Events** verschwindet (Issue [#15](https://github.com/nobelp/mennekes-amtron-ha/issues/15)).
+Die Log-Warnung des Recorders zu den Attributen des Sensors **System Events** verschwindet (Issue [#15](https://github.com/nobelp/mennekes-amtron-ha/issues/15)).
 
-*Pre-release. The recorder log warning about the attributes of the **System Events** sensor goes away (issue [#15](https://github.com/nobelp/mennekes-amtron-ha/issues/15)).*
+*The recorder log warning about the attributes of the **System Events** sensor goes away (issue [#15](https://github.com/nobelp/mennekes-amtron-ha/issues/15)).*
+
+> **Nach dem Update:** Home Assistant neu starten.
+>
+> *After the update: restart Home Assistant.*
 
 ### Behoben / Fixed
 
