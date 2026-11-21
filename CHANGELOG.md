@@ -8,6 +8,16 @@ Alle wesentlichen Änderungen an diesem Projekt. Versionierung nach
 
 ---
 
+## [2.3.5-beta.1] - 2026-11-21
+
+Pre-release. Die Log-Warnung des Recorders zu den Attributen des Sensors **System Events** verschwindet (Issue [#15](https://github.com/nobelp/mennekes-amtron-ha/issues/15)).
+
+*Pre-release. The recorder log warning about the attributes of the **System Events** sensor goes away (issue [#15](https://github.com/nobelp/mennekes-amtron-ha/issues/15)).*
+
+### Behoben / Fixed
+
+- Die Attribute `events`, `levels` und `event_ids` des Sensors **System Events** werden nicht mehr in die Recorder-Datenbank geschrieben. Die Ereignisliste überschreitet das Limit des Recorders von 16384 Bytes pro Zustand. Home Assistant verwarf dann alle Attribute und schrieb bei jeder Aktualisierung eine Warnung ins Log. Für das Dashboard und Templates ändert sich nichts, `state_attr(..., 'events')` liefert die Liste weiterhin. Nur ein Verlauf der Liste wird nicht mehr gespeichert, der ohnehin nicht nutzbar war. Die „Bekannte Einschränkung“ aus 2.3.4 entfällt damit. *The `events`, `levels` and `event_ids` attributes of the **System Events** sensor are no longer written to the recorder database. The event list exceeds the recorder limit of 16384 bytes per state; Home Assistant then dropped all attributes and logged a warning on every update. Nothing changes for the dashboard and templates, `state_attr(..., 'events')` still returns the list. Only a history of the list is no longer stored, which was of no use anyway. This resolves the "known limitation" of 2.3.4.*
+
 ## [2.3.4] - 2026-11-21
 
 Die Integration überlastet die Wallbox nach einem Abbruch der Modbus-Sitzung nicht mehr (Issue [#13](https://github.com/nobelp/mennekes-amtron-ha/issues/13), gemeldet und analysiert von [@ePiccio](https://github.com/ePiccio)), und ein langsamer Webserver der Wallbox hält das Laden der Integration nicht mehr auf (Issue [#14](https://github.com/nobelp/mennekes-amtron-ha/issues/14)).
